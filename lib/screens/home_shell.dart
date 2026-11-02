@@ -39,6 +39,16 @@ class _HomeShellState extends ConsumerState<HomeShell>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Ask once the character exists, so the OS prompt follows Session Zero
+    // rather than greeting a first launch. iOS only ever asks once.
+    if (ref.read(rpgStateProvider).character.reminderMinutes != null) {
+      ref.read(reminderSchedulerProvider).requestPermission().catchError((
+        Object e,
+      ) {
+        debugPrint('Could not request notification permission: $e');
+        return false;
+      });
+    }
   }
 
   @override

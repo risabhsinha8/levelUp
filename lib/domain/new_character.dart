@@ -51,14 +51,18 @@ class ModifierChoice {
   final bool isBuff;
 }
 
-/// Builds the first state for a character created in Session Zero: level 0
-/// in every branch, the chosen keystones, buffs and debuffs, an optional
+/// Builds the first state for a character created in Session Zero: the
+/// picked [avatar], level 0 in every branch, the chosen pillars ([branchNames] holds custom names;
+/// [activeBranches] defaults to the five core ones), the chosen keystones, buffs and debuffs, an optional
 /// main quest for the current month, the starting loot table, the signed
 /// oath (if [oathStrokes] is non-empty), and Season 1: the calendar quarter
 /// containing [today], so joining on Nov 1 starts on day 32 of Oct 1–Dec 31.
 RpgState buildNewCharacterState({
   required String name,
   required String classTitle,
+  AvatarSpec? avatar,
+  List<BranchType> activeBranches = BranchType.defaults,
+  Map<BranchType, String> branchNames = const {},
   required List<KeystoneChoice> keystones,
   MainQuestChoice? mainQuest,
   List<LootChoice> loot = const [],
@@ -87,6 +91,7 @@ RpgState buildNewCharacterState({
       name: name,
       classTitle: classTitle,
       currentSeasonId: season.id,
+      avatar: avatar,
     ),
     branchConfigs: [
       for (final branch in BranchType.values)
@@ -94,10 +99,15 @@ RpgState buildNewCharacterState({
           branch: branch,
           buffs: modifiersFor(branch, buffs: true),
           debuffs: modifiersFor(branch, buffs: false),
+          customName: BranchConfig.customNameFor(
+            branch,
+            branchNames[branch] ?? '',
+          ),
+          isEnabled: activeBranches.contains(branch),
         ),
     ],
     habits: [
-      for (final branch in BranchType.values)
+      for (final branch in activeBranches)
         for (final choice in keystones)
           if (choice.branch == branch && choice.title.trim().isNotEmpty)
             Habit(
@@ -109,7 +119,9 @@ RpgState buildNewCharacterState({
             ),
     ],
     quests: [
-      if (mainQuest != null && mainQuest.title.trim().isNotEmpty)
+      if (mainQuest != null &&
+          mainQuest.title.trim().isNotEmpty &&
+          activeBranches.contains(mainQuest.branch))
         Quest(
           id: newId(),
           title: mainQuest.title.trim(),

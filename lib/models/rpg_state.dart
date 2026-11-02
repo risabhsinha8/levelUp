@@ -44,11 +44,25 @@ class RpgState {
   List<Season> get archivedSeasons =>
       seasons.where((s) => s.isArchived).toList().reversed.toList();
 
-  /// Config for [branch], or a level-0 default if none is stored.
+  /// Config for [branch], or a level-0 default if none is stored (enabled
+  /// only for the five core branches, so spare slots start resting).
   BranchConfig configFor(BranchType branch) => branchConfigs.firstWhere(
     (c) => c.branch == branch,
-    orElse: () => BranchConfig(branch: branch),
+    orElse: () => BranchConfig(
+      branch: branch,
+      isEnabled: BranchType.defaults.contains(branch),
+    ),
   );
+
+  /// The pillars in play this season, in branch order. Resting ones are
+  /// hidden everywhere and count toward nothing.
+  List<BranchType> get activeBranches => [
+    for (final branch in BranchType.values)
+      if (configFor(branch).isEnabled) branch,
+  ];
+
+  /// The character's name for [branch].
+  String nameOf(BranchType branch) => configFor(branch).name;
 
   /// All habits of [branch], including archived ones (their history still
   /// counts).
@@ -59,8 +73,14 @@ class RpgState {
   bool hasCheckIns(String habitId) =>
       logs.any((l) => l.completedHabitIds.contains(habitId));
 
-  /// Habits the user can still check off and edit.
-  List<Habit> get activeHabits => habits.where((h) => !h.isArchived).toList();
+  /// Habits the user can still check off and edit: not archived, in an
+  /// active pillar.
+  List<Habit> get activeHabits {
+    final branches = activeBranches.toSet();
+    return habits
+        .where((h) => !h.isArchived && branches.contains(h.branch))
+        .toList();
+  }
 
   /// The active keystone of [branch], if any.
   Habit? keystoneFor(BranchType branch) => habits
@@ -78,10 +98,11 @@ class RpgState {
 
   /// Habits scheduled for [date]'s half of the month, plus any completed on
   /// [date] (e.g. a habit pivoted out later), grouped in branch order.
+  /// Habits of resting pillars are left out.
   List<Habit> habitsShownOn(DateTime date) {
     final done = completedOn(date);
     return [
-      for (final branch in BranchType.values)
+      for (final branch in activeBranches)
         for (final h in habits)
           if (h.branch == branch && (h.isActiveOn(date) || done.contains(h.id)))
             h,

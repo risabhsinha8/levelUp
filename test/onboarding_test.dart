@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -174,6 +175,89 @@ void main() {
       expect(find.text('Shadow Monk'), findsWidgets); // filled the field
     });
 
+    testWidgets('step 1 rolls the avatar, picks and renames the pillars', (
+      tester,
+    ) async {
+      final repo = await pumpLevelUp(
+        tester,
+        now: today,
+        random: math.Random(7),
+      );
+      // Session Zero starts on a random avatar; Randomize rolls again.
+      final rolls = math.Random(7);
+      AvatarSpec.random(rolls);
+      final avatar = AvatarSpec.random(rolls);
+      await tapAndSettle(
+        tester,
+        find.byKey(const ValueKey('avatar-randomize')),
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Character Name'),
+        'Ari',
+      );
+      await tapAndSettle(tester, find.text('Caffeine Paladin'));
+      await tapAndSettle(
+        tester,
+        find.byKey(const ValueKey('pillar-toggle-empire')),
+      );
+      await tapAndSettle(
+        tester,
+        find.byKey(const ValueKey('pillar-toggle-spirit')),
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('pillar-name-body')),
+        'Health',
+      );
+      await tester.pump();
+      await tapAndSettle(tester, find.text('Next'));
+
+      // Step 2 follows the chosen pillars and their names.
+      expect(find.text('Forge Your 5 Keystone Habits'), findsOneWidget);
+      expect(find.text('Health'), findsOneWidget);
+      expect(find.text('Side project · 30 focused min'), findsNothing);
+      for (final chip in [
+        'Read · 10 pages',
+        'Drink water · 13 cups daily',
+        'Gratitude list · 3 things',
+      ]) {
+        await tapAndSettle(tester, find.text(chip));
+      }
+      await tapAndSettle(tester, find.text('Next'));
+      await tapAndSettle(tester, find.text('Next')); // Step 3 is optional.
+      for (final chip in [
+        'Ice cream night',
+        'Buy a new book',
+        'Nice dinner out',
+        'Big gear upgrade',
+      ]) {
+        await tapAndSettle(tester, find.text(chip));
+      }
+      await tapAndSettle(tester, find.text('Next'));
+
+      expect(
+        find.textContaining('my Mind, Health, Craft, Bond and Spirit through'),
+        findsOneWidget,
+      );
+      await sign(tester);
+      await tapAndSettle(tester, find.text('Begin Season 1'));
+
+      final saved = repo.saved!;
+      expect(saved.activeBranches, [
+        BranchType.mind,
+        BranchType.body,
+        BranchType.craft,
+        BranchType.bond,
+        BranchType.spirit,
+      ]);
+      expect(saved.nameOf(BranchType.body), 'Health');
+      expect(saved.character.avatar, avatar);
+      expect(saved.habits.map((h) => h.title), [
+        'Read',
+        'Drink water',
+        'Gratitude list',
+      ]);
+    });
+
     testWidgets(
       'completing all 5 steps writes the character and opens HomeShell',
       (tester) async {
@@ -242,6 +326,54 @@ void main() {
         expect(find.text('SEALED · Oct 24'), findsOneWidget);
       },
     );
+
+    testWidgets('loot vault takes several rewards per tier', (tester) async {
+      final repo = await pumpLevelUp(tester, now: today);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Character Name'),
+        'Ari',
+      );
+      await tapAndSettle(tester, find.text('Code Ranger'));
+      await tapAndSettle(tester, find.text('Next'));
+      await tapAndSettle(tester, find.text('Read · 10 pages'));
+      await tapAndSettle(tester, find.text('Next'));
+      await tapAndSettle(tester, find.text('Next'));
+
+      // Common: two chips, one toggled off again, and a custom reward.
+      for (final chip in ['Ice cream night', 'Fancy coffee', 'Movie night']) {
+        await tapAndSettle(tester, find.text(chip));
+      }
+      await tapAndSettle(tester, find.text('Fancy coffee'));
+      await tester.enterText(
+        find.byKey(const ValueKey('loot-common')),
+        'Bubble tea',
+      );
+      await tapAndSettle(tester, find.byKey(const ValueKey('loot-add-common')));
+      expect(find.text('3 rewards · your choice each key'), findsOneWidget);
+      // Rare: a chip; Epic: typed but not added still counts.
+      await tapAndSettle(tester, find.text('Buy a new book'));
+      await tester.enterText(
+        find.byKey(const ValueKey('loot-epic')),
+        'Massage',
+      );
+      await tester.pump();
+      expect(enabled(tester, 'Next'), isFalse);
+      await tapAndSettle(tester, find.text('Big gear upgrade'));
+      expect(enabled(tester, 'Next'), isTrue);
+      await tapAndSettle(tester, find.text('Next'));
+      expect(find.text('6 rewards in the loot vault'), findsOneWidget);
+
+      await sign(tester);
+      await tapAndSettle(tester, find.text('Begin Season 1'));
+      expect(repo.saved!.loot.map((l) => (l.tier, l.title)), [
+        (LootTier.common, 'Ice cream night'),
+        (LootTier.common, 'Movie night'),
+        (LootTier.common, 'Bubble tea'),
+        (LootTier.rare, 'Buy a new book'),
+        (LootTier.epic, 'Massage'),
+        (LootTier.legendary, 'Big gear upgrade'),
+      ]);
+    });
 
     testWidgets('loot vault needs a reward for every tier', (tester) async {
       await pumpLevelUp(tester, now: today);

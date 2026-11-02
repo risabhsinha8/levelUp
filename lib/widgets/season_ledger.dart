@@ -18,7 +18,7 @@ class MathLedgerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final styles = RpgStyles.of(context);
     final rows = [
-      for (final branch in BranchType.values)
+      for (final branch in sheet.activeBranches)
         (
           branch: branch,
           base: state.configFor(branch).baseLevel,
@@ -57,7 +57,7 @@ class MathLedgerCard extends StatelessWidget {
           for (final r in rows)
             TableRow(
               children: [
-                _BranchLabel(branch: r.branch),
+                _BranchLabel(branch: r.branch, name: r.stats.name),
                 cell('${r.base}', num(RpgColors.ink)),
                 cell('+${r.stats.forgedNodes}', num()),
                 cell('+${r.stats.completedFeats}', num()),
@@ -191,10 +191,10 @@ class MonthBreakdownCard extends StatelessWidget {
               cell('Total', styles.stat.copyWith(fontSize: 10)),
             ],
           ),
-          for (final branch in BranchType.values)
+          for (final branch in sheet.activeBranches)
             TableRow(
               children: [
-                _BranchLabel(branch: branch),
+                _BranchLabel(branch: branch, name: state.nameOf(branch)),
                 for (var m = 1; m <= 3; m++)
                   cell(
                     started(windows[m - 1]) ? '${days[m - 1][branch]}' : '—',
@@ -218,9 +218,10 @@ class MonthBreakdownCard extends StatelessWidget {
 }
 
 class _BranchLabel extends StatelessWidget {
-  const _BranchLabel({required this.branch});
+  const _BranchLabel({required this.branch, required this.name});
 
   final BranchType branch;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +238,7 @@ class _BranchLabel extends StatelessWidget {
         const SizedBox(width: 8),
         Flexible(
           child: Text(
-            branch.displayName,
+            name,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium,
           ),

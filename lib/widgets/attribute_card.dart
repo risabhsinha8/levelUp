@@ -73,7 +73,7 @@ class AttributeCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    stats.branch.displayName,
+                    stats.name,
                     style: theme.textTheme.titleMedium?.copyWith(color: color),
                   ),
                 ),

@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import '../theme/rpg_theme.dart';
 
 /// Gold medallion showing the character level. Counts up on first show and
-/// pulses with a glow whenever the level rises.
+/// pulses with a glow whenever the level rises. Below 40pt only the number
+/// shows.
 class LevelBadge extends StatefulWidget {
   const LevelBadge({super.key, required this.level, this.size = 56});
 
@@ -68,29 +69,38 @@ class _LevelBadgeState extends State<LevelBadge>
           );
         },
         child: ExcludeSemantics(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'LVL',
-                style: styles.stat.copyWith(
-                  fontSize: 9,
-                  color: RpgColors.gold,
-                  letterSpacing: 1.5,
-                ),
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.size >= 40)
+                    Text(
+                      'LVL',
+                      style: styles.stat.copyWith(
+                        fontSize: 9,
+                        color: RpgColors.gold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  TweenAnimationBuilder<double>(
+                    // Counts up from 0 on first show; later changes animate
+                    // from the current value.
+                    tween: Tween(begin: 0, end: widget.level.toDouble()),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => Text(
+                      value.round().toString(),
+                      style: styles.statLarge.copyWith(
+                        height: 1.1,
+                        fontSize: widget.size < 40 ? 13 : null,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              TweenAnimationBuilder<double>(
-                // Counts up from 0 on first show; later changes animate
-                // from the current value.
-                tween: Tween(begin: 0, end: widget.level.toDouble()),
-                duration: const Duration(milliseconds: 900),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, _) => Text(
-                  value.round().toString(),
-                  style: styles.statLarge.copyWith(height: 1.1),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

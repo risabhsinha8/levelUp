@@ -15,6 +15,8 @@ const branchDescriptions = {
   BranchType.craft: 'Skills and creative practice',
   BranchType.bond: 'Family, friends and love',
   BranchType.empire: 'Work, money and side projects',
+  BranchType.spirit: 'Faith, gratitude and stillness',
+  BranchType.wander: 'Adventure, play and new places',
 };
 
 /// Quick-fill keystones per branch: (title, target criteria).
@@ -43,6 +45,16 @@ const keystoneSuggestions = {
     ('Side project', '30 focused min'),
     ('Learn a skill', '1 lesson'),
     ('Budget check', '5 min'),
+  ],
+  BranchType.spirit: [
+    ('Gratitude list', '3 things'),
+    ('Pray or reflect', '5 min'),
+    ('Sit in silence', '2 min'),
+  ],
+  BranchType.wander: [
+    ('Go outside', '20 min'),
+    ('Try something new', '1 small thing'),
+    ('Play', 'A game, sport or jam'),
   ],
 };
 

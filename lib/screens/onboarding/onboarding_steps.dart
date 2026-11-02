@@ -7,6 +7,8 @@ import '../../domain/rpg_engine.dart';
 import '../../models/rpg_models.dart';
 import '../../theme/rpg_theme.dart';
 import '../../widgets/oath_signature_card.dart';
+import '../../widgets/pillar_roster.dart';
+import '../../widgets/pixel_avatar.dart';
 import '../../widgets/quest_widgets.dart';
 import 'onboarding_data.dart';
 
@@ -82,10 +84,14 @@ class SuggestionChips extends StatelessWidget {
 class BranchChoiceChips extends StatelessWidget {
   const BranchChoiceChips({
     super.key,
+    required this.branches,
+    required this.names,
     required this.selected,
     required this.onSelected,
   });
 
+  final List<BranchType> branches;
+  final Map<BranchType, String> names;
   final BranchType selected;
   final ValueChanged<BranchType> onSelected;
 
@@ -95,9 +101,9 @@ class BranchChoiceChips extends StatelessWidget {
       spacing: 6,
       runSpacing: 6,
       children: [
-        for (final branch in BranchType.values)
+        for (final branch in branches)
           ChoiceChip(
-            label: Text(branch.displayName),
+            label: Text(names[branch] ?? branch.displayName),
             selected: selected == branch,
             showCheckmark: false,
             selectedColor: branch.color.withValues(alpha: 0.25),
@@ -146,14 +152,24 @@ class _SectionCard extends StatelessWidget {
 class RollCharacterStep extends StatelessWidget {
   const RollCharacterStep({
     super.key,
+    required this.avatar,
+    required this.onAvatarChanged,
     required this.name,
     required this.classTitle,
+    required this.pillars,
+    required this.pillarNames,
+    required this.onTogglePillar,
     required this.onChanged,
     required this.onRestore,
   });
 
+  final AvatarSpec avatar;
+  final ValueChanged<AvatarSpec> onAvatarChanged;
   final TextEditingController name;
   final TextEditingController classTitle;
+  final Set<BranchType> pillars;
+  final Map<BranchType, TextEditingController> pillarNames;
+  final ValueChanged<BranchType> onTogglePillar;
   final VoidCallback onChanged;
   final VoidCallback onRestore;
 
@@ -167,6 +183,12 @@ class RollCharacterStep extends StatelessWidget {
           'Every campaign starts with a Session Zero. Who is starting this '
           'one?',
       children: [
+        AvatarEditor(
+          spec: avatar,
+          onChanged: onAvatarChanged,
+          collapsible: true,
+        ),
+        const SizedBox(height: 16),
         TextField(
           controller: name,
           textCapitalization: TextCapitalization.words,
@@ -201,45 +223,25 @@ class RollCharacterStep extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The Five Branches',
+                'Your Pillars',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: RpgColors.gold,
                 ),
               ),
-              const SizedBox(height: 10),
-              for (final branch in BranchType.values)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: branch.color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        width: 64,
-                        child: Text(
-                          branch.displayName,
-                          style: styles.stat.copyWith(
-                            color: branch.color,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          branchDescriptions[branch]!,
-                          style: styles.stat,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              const SizedBox(height: 4),
+              Text(
+                'The branches of your skill tree. Keep the classic five, '
+                'add a spare, drop one, or rename them to fit your life.',
+                style: styles.stat,
+              ),
+              const SizedBox(height: 8),
+              PillarRoster(
+                enabled: pillars,
+                onToggle: onTogglePillar,
+                nameFields: pillarNames,
+                details: branchDescriptions,
+                onNameChanged: onChanged,
+              ),
               const Divider(height: 20),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,11 +283,15 @@ class RollCharacterStep extends StatelessWidget {
 class KeystonesStep extends StatelessWidget {
   const KeystonesStep({
     super.key,
+    required this.branches,
+    required this.names,
     required this.titles,
     required this.targets,
     required this.onChanged,
   });
 
+  final List<BranchType> branches;
+  final Map<BranchType, String> names;
   final Map<BranchType, TextEditingController> titles;
   final Map<BranchType, TextEditingController> targets;
   final VoidCallback onChanged;
@@ -294,7 +300,7 @@ class KeystonesStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return StepPage(
-      title: 'Forge Your 5 Keystone Habits',
+      title: 'Forge Your ${branches.length} Keystone Habits',
       subtitle: 'The anti-burnout setup.',
       children: [
         _SectionCard(
@@ -315,7 +321,7 @@ class KeystonesStep extends StatelessWidget {
             ],
           ),
         ),
-        for (final branch in BranchType.values)
+        for (final branch in branches)
           _SectionCard(
             color: branch.color,
             child: Column(
@@ -329,10 +335,12 @@ class KeystonesStep extends StatelessWidget {
                       color: RpgColors.gold,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      branch.displayName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: branch.color,
+                    Flexible(
+                      child: Text(
+                        names[branch]!,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: branch.color,
+                        ),
                       ),
                     ),
                   ],
@@ -382,6 +390,8 @@ class KeystonesStep extends StatelessWidget {
 class BuffsAndQuestStep extends StatelessWidget {
   const BuffsAndQuestStep({
     super.key,
+    required this.branches,
+    required this.names,
     required this.modifierBranch,
     required this.buff,
     required this.debuff,
@@ -395,6 +405,8 @@ class BuffsAndQuestStep extends StatelessWidget {
     required this.onChanged,
   });
 
+  final List<BranchType> branches;
+  final Map<BranchType, String> names;
   final BranchType modifierBranch;
   final TextEditingController buff;
   final TextEditingController debuff;
@@ -427,6 +439,8 @@ class BuffsAndQuestStep extends StatelessWidget {
               Text('Which attribute needs it most?', style: styles.stat),
               const SizedBox(height: 8),
               BranchChoiceChips(
+                branches: branches,
+                names: names,
                 selected: modifierBranch,
                 onSelected: onModifierBranchChanged,
               ),
@@ -511,6 +525,8 @@ class BuffsAndQuestStep extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               BranchChoiceChips(
+                branches: branches,
+                names: names,
                 selected: questBranch,
                 onSelected: onQuestBranchChanged,
               ),
@@ -549,9 +565,22 @@ class BuffsAndQuestStep extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class LootVaultStep extends StatelessWidget {
-  const LootVaultStep({super.key, required this.loot, required this.onChanged});
+  const LootVaultStep({
+    super.key,
+    required this.rewards,
+    required this.drafts,
+    required this.onToggle,
+    required this.onAdd,
+    required this.onChanged,
+  });
 
-  final Map<LootTier, TextEditingController> loot;
+  /// Rewards picked so far per tier, in the order added.
+  final Map<LootTier, List<String>> rewards;
+
+  /// "Add your own" fields; typed text counts as a reward too.
+  final Map<LootTier, TextEditingController> drafts;
+  final void Function(LootTier tier, String title) onToggle;
+  final ValueChanged<LootTier> onAdd;
   final VoidCallback onChanged;
 
   @override
@@ -561,8 +590,8 @@ class LootVaultStep extends StatelessWidget {
     return StepPage(
       title: 'Stock Your Loot Vault',
       subtitle:
-          'Keys are earned automatically. Choose one real-life reward per '
-          'tier to spend them on.',
+          'Keys are earned automatically. Pick as many real-life rewards per '
+          'tier as you like: each time you spend a key, you choose one.',
       children: [
         for (final tier in LootTier.values)
           _SectionCard(
@@ -590,29 +619,64 @@ class LootVaultStep extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final title in {
+                      ...lootSuggestions[tier]!,
+                      ...rewards[tier]!,
+                    })
+                      FilterChip(
+                        key: ValueKey('loot-chip-${tier.name}-$title'),
+                        label: Text(title),
+                        selected: rewards[tier]!.contains(title),
+                        showCheckmark: true,
+                        checkmarkColor: tier.color,
+                        selectedColor: tier.color.withValues(alpha: 0.2),
+                        side: BorderSide(
+                          color: rewards[tier]!.contains(title)
+                              ? tier.color
+                              : RpgColors.outline,
+                        ),
+                        labelStyle: styles.stat.copyWith(
+                          color: RpgColors.parchment,
+                          fontSize: 11,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (_) => onToggle(tier, title),
+                      ),
+                  ],
+                ),
                 TextField(
                   key: ValueKey('loot-${tier.name}'),
-                  controller: loot[tier],
+                  controller: drafts[tier],
                   textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
                   onChanged: (_) => onChanged(),
+                  onSubmitted: (_) => onAdd(tier),
                   decoration: InputDecoration(
-                    labelText: '${tier.label} reward',
+                    labelText: 'Add your own ${tier.label} reward',
                     prefixIcon: Icon(
                       LucideIcons.gift,
                       color: tier.color,
                       size: 18,
                     ),
+                    suffixIcon: IconButton(
+                      key: ValueKey('loot-add-${tier.name}'),
+                      tooltip: 'Add ${tier.label} reward',
+                      icon: Icon(LucideIcons.plus, color: tier.color),
+                      onPressed: () => onAdd(tier),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                SuggestionChips(
-                  color: tier.color,
-                  labels: lootSuggestions[tier]!,
-                  onSelected: (i) {
-                    loot[tier]!.text = lootSuggestions[tier]![i];
-                    onChanged();
-                  },
-                ),
+                const SizedBox(height: 6),
+                Text(switch (rewards[tier]!.length) {
+                  0 => 'Pick at least one.',
+                  1 => '1 reward',
+                  final n => '$n rewards · your choice each key',
+                }, style: styles.stat.copyWith(fontSize: 10)),
               ],
             ),
           ),
@@ -630,6 +694,8 @@ class SignOathStep extends StatelessWidget {
     super.key,
     required this.name,
     required this.classTitle,
+    required this.avatar,
+    required this.names,
     required this.keystones,
     required this.mainQuest,
     required this.lootCount,
@@ -642,6 +708,10 @@ class SignOathStep extends StatelessWidget {
 
   final String name;
   final String classTitle;
+  final AvatarSpec avatar;
+
+  /// Names of the chosen pillars, in branch order.
+  final Map<BranchType, String> names;
   final List<KeystoneChoice> keystones;
   final MainQuestChoice? mainQuest;
   final int lootCount;
@@ -679,6 +749,8 @@ class SignOathStep extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  PixelAvatar(spec: avatar, size: 56),
+                  const SizedBox(width: 10),
                   Container(
                     width: 48,
                     height: 48,
@@ -732,9 +804,11 @@ class SignOathStep extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       SizedBox(
-                        width: 60,
+                        width: 84,
                         child: Text(
-                          k.branch.displayName,
+                          names[k.branch]!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: styles.stat.copyWith(color: k.branch.color),
                         ),
                       ),
@@ -779,9 +853,9 @@ class SignOathStep extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'I, $name, swear to show up for my Mind, Body, Craft, Bond and '
-          'Empire through Season 1. One point a day. No streak shame. '
-          'Progress over perfection.',
+          'I, $name, swear to show up for my '
+          '${joinPillarNames(names.values)} through Season 1. One point a '
+          'day. No streak shame. Progress over perfection.',
           style: theme.textTheme.bodyMedium?.copyWith(
             fontStyle: FontStyle.italic,
             height: 1.45,

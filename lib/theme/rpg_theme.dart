@@ -29,6 +29,8 @@ extension BranchColor on BranchType {
     BranchType.craft => LucideIcons.hammer,
     BranchType.bond => LucideIcons.heartHandshake,
     BranchType.empire => LucideIcons.castle,
+    BranchType.spirit => LucideIcons.sun,
+    BranchType.wander => LucideIcons.compass,
   };
 }
 

@@ -7,6 +7,7 @@ import '../providers/rpg_store_provider.dart';
 import '../theme/rpg_theme.dart';
 import '../widgets/attribute_card.dart';
 import '../widgets/celebration_overlay.dart';
+import '../widgets/loot_table_view.dart';
 import '../widgets/oath_signature_card.dart';
 import '../widgets/skill_tree_canvas.dart';
 
@@ -22,22 +23,24 @@ class SkillTreeScreen extends ConsumerWidget {
   ) async {
     final result = await ref.read(rpgStoreProvider.notifier).forgeNode(branch);
     if (result == null || !context.mounted) return;
-    await showNodeForgedCelebration(context, result);
+    final tier = await showNodeForgedCelebration(
+      context,
+      result,
+      choosable: choosableLootTiers(ref),
+    );
+    if (tier != null && context.mounted) {
+      await chooseLootReward(context, ref, tier);
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(rpgStateProvider);
     final sheet = ref.watch(characterSheetProvider).requireValue;
-    final forged = sheet.branches.values.fold(
-      0,
-      (sum, b) => sum + b.forgedNodes,
-    );
-    final ready = sheet.branches.values.fold(
-      0,
-      (sum, b) => sum + b.readyToForge,
-    );
-    final totalNodes = RpgEngine.maxNodesPerBranch * BranchType.values.length;
+    final active = [for (final b in sheet.activeBranches) sheet.branches[b]!];
+    final forged = active.fold(0, (sum, b) => sum + b.forgedNodes);
+    final ready = active.fold(0, (sum, b) => sum + b.readyToForge);
+    final totalNodes = RpgEngine.maxNodesPerBranch * active.length;
 
     return ListView(
       key: const PageStorageKey('skill-tree'),
@@ -70,7 +73,7 @@ class SkillTreeScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 20),
         _SectionHeader(title: 'Attributes', trailing: 'Lv ${sheet.totalLevel}'),
-        for (final branch in BranchType.values)
+        for (final branch in sheet.activeBranches)
           AttributeCard(
             stats: sheet.branches[branch]!,
             config: state.configFor(branch),

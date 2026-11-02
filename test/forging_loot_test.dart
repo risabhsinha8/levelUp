@@ -95,7 +95,7 @@ RpgSqliteRepository openRepo([DatabaseHelper? helper]) {
 }
 
 List<int> forgedCounts(RpgState state) => [
-  for (final b in BranchType.values) state.configFor(b).forgedNodeCount,
+  for (final b in BranchType.defaults) state.configFor(b).forgedNodeCount,
 ];
 
 void main() {
@@ -252,6 +252,13 @@ void main() {
       );
       await db.execute('DROP TABLE branch_configs');
       await db.execute('ALTER TABLE v3 RENAME TO branch_configs');
+      // Characters gained avatar_data in v6.
+      await db.execute(
+        'CREATE TABLE c5 AS SELECT id, name, class_title, signature_data, '
+        'current_season_id, signature_text FROM characters',
+      );
+      await db.execute('DROP TABLE characters');
+      await db.execute('ALTER TABLE c5 RENAME TO characters');
       await db.setVersion(3);
       await setup.close();
 
@@ -334,6 +341,36 @@ void main() {
       expect(find.bySemanticsLabel('Mind node 1, unlocked'), findsOneWidget);
       // Released after a hold: no details sheet opened.
       expect(find.text('Mind · Node 1'), findsNothing);
+    });
+
+    testWidgets('the forged key can be spent on a chosen reward', (
+      tester,
+    ) async {
+      final repo = await pumpReadyTree(tester);
+      final claimed = repo.saved!.loot.where((l) => l.isClaimed).length;
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(const ValueKey('node-mind-0'))),
+      );
+      for (var i = 0; i < 13; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await gesture.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.text('Choose a Rare reward'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Pick a Rare Reward'), findsOneWidget);
+      expect(find.text('Binge TV night'), findsWidgets);
+      await tester.tap(find.text('New video game').last);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('LOOT UNLOCKED!'), findsOneWidget);
+      final claims = repo.saved!.loot.where((l) => l.isClaimed).toList();
+      expect(claims, hasLength(claimed + 1));
+      expect(claims.last.title, 'New video game');
     });
   });
 

@@ -19,6 +19,7 @@ import '../models/rpg_state.dart';
 import '../providers/rpg_store_provider.dart';
 import '../theme/rpg_theme.dart';
 import 'oath_signature_card.dart';
+import 'pixel_avatar.dart';
 
 /// Hands a rendered card PNG to the platform share sheet. [origin] anchors
 /// the iPad popover. Override in tests.
@@ -171,9 +172,9 @@ class CharacterShareCard extends StatelessWidget {
     final theme = Theme.of(context);
     final styles = RpgStyles.of(context);
     final season = state.currentSeason;
-    final forged = sheet.branches.values.fold(
+    final forged = sheet.activeBranches.fold(
       0,
-      (sum, b) => sum + b.forgedNodes,
+      (sum, b) => sum + sheet.branches[b]!.forgedNodes,
     );
     final daysLogged = {
       for (final log in state.logs)
@@ -202,9 +203,11 @@ class CharacterShareCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Header: name, class, season and the level shield.
+              // Header: avatar, name, class, season and the level shield.
               Row(
                 children: [
+                  PixelAvatar(spec: state.character.avatarOrDefault, size: 58),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,15 +250,19 @@ class CharacterShareCard extends StatelessWidget {
               Expanded(
                 child: Semantics(
                   label: [
-                    for (final b in BranchType.values)
-                      '${b.displayName} level ${sheet.branches[b]!.level}',
+                    for (final b in sheet.activeBranches)
+                      '${state.nameOf(b)} level ${sheet.branches[b]!.level}',
                   ].join(', '),
                   child: CustomPaint(
                     size: Size.infinite,
                     painter: AttributeRadarPainter(
                       levels: {
-                        for (final b in BranchType.values)
+                        for (final b in sheet.activeBranches)
                           b: sheet.branches[b]!.level,
+                      },
+                      names: {
+                        for (final b in sheet.activeBranches)
+                          b: state.nameOf(b),
                       },
                       labelStyle: styles.stat.copyWith(
                         fontSize: 11,
@@ -273,7 +280,7 @@ class CharacterShareCard extends StatelessWidget {
                   _Stat(
                     value:
                         '$forged / '
-                        '${RpgEngine.maxNodesPerBranch * BranchType.values.length}',
+                        '${RpgEngine.maxNodesPerBranch * sheet.activeBranches.length}',
                     label: 'Nodes Forged',
                   ),
                   _Stat(value: '$quests', label: 'Quests Done'),
@@ -548,11 +555,20 @@ class _OrnateBorderPainter extends CustomPainter {
   bool shouldRepaint(_OrnateBorderPainter old) => false;
 }
 
-/// Pentagon radar of the five branch levels, each axis in its branch color.
+/// Radar of the active pillars' levels (a pentagon for five), each axis in
+/// its branch color.
 class AttributeRadarPainter extends CustomPainter {
-  AttributeRadarPainter({required this.levels, required this.labelStyle});
+  AttributeRadarPainter({
+    required this.levels,
+    this.names = const {},
+    required this.labelStyle,
+  });
 
+  /// Level per axis, in axis order.
   final Map<BranchType, int> levels;
+
+  /// Axis labels; default names when missing.
+  final Map<BranchType, String> names;
   final TextStyle labelStyle;
 
   /// The outer ring's level: at least 5, rounded up to a multiple of 5.
@@ -565,7 +581,7 @@ class AttributeRadarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero).translate(0, 4);
     final radius = math.min(size.width, size.height) / 2 - 30;
-    final branches = BranchType.values;
+    final branches = levels.keys.toList();
     Offset point(int i, double fraction) {
       final angle = -math.pi / 2 + 2 * math.pi * i / branches.length;
       return center +
@@ -627,7 +643,7 @@ class AttributeRadarPainter extends CustomPainter {
 
       final label = TextPainter(
         text: TextSpan(
-          text: '${b.displayName}\n',
+          text: '${names[b] ?? b.displayName}\n',
           style: labelStyle.copyWith(color: b.color),
           children: [
             TextSpan(
@@ -650,5 +666,7 @@ class AttributeRadarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(AttributeRadarPainter old) =>
-      !mapEquals(old.levels, levels) || old.labelStyle != labelStyle;
+      !mapEquals(old.levels, levels) ||
+      !mapEquals(old.names, names) ||
+      old.labelStyle != labelStyle;
 }

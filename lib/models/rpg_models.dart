@@ -5,6 +5,10 @@
 /// `YYYY-MM-DD` strings in JSON.
 library;
 
+import 'avatar.dart';
+
+export 'avatar.dart';
+
 // ---------------------------------------------------------------------------
 // Date helpers
 // ---------------------------------------------------------------------------
@@ -45,16 +49,28 @@ bool _listEquals<T>(List<T> a, List<T> b) {
 // Enums
 // ---------------------------------------------------------------------------
 
-/// The five core attribute branches of the skill tree.
+/// The attribute branches ("pillars") of the skill tree: the five core
+/// ones plus two spare slots. Each character picks which are enabled and
+/// may rename them ([BranchConfig.name]); the enum name is the stable id
+/// stored in SQLite and backups.
 enum BranchType {
   mind('Mind', 0xFF6366F1), // Indigo
   body('Body', 0xFF10B981), // Emerald
   craft('Craft', 0xFFF59E0B), // Amber
   bond('Bond', 0xFFF43F5E), // Rose
-  empire('Empire', 0xFFA855F7); // Purple
+  empire('Empire', 0xFFA855F7), // Purple
+  spirit('Spirit', 0xFF0EA5E9), // Sky (spare slot)
+  wander('Wander', 0xFF84CC16); // Lime (spare slot)
 
   const BranchType(this.displayName, this.colorValue);
 
+  /// The pillars enabled for a new character: the five core branches.
+  static const defaults = [mind, body, craft, bond, empire];
+
+  /// Fewest pillars a character can have enabled.
+  static const minEnabled = 3;
+
+  /// Default name, shown unless the character renamed the pillar.
   final String displayName;
 
   /// ARGB color, e.g. `Color(branch.colorValue)` in Flutter.
@@ -95,9 +111,38 @@ class BranchConfig {
     this.buffs = const [],
     this.debuffs = const [],
     this.forgedNodeCount = 0,
+    this.customName = '',
+    this.isEnabled = true,
   });
 
+  /// Longest custom pillar name, so it fits the skill tree's columns.
+  static const maxNameLength = 14;
+
   final BranchType branch;
+
+  /// The character's name for the pillar; empty means the default
+  /// [BranchType.displayName].
+  final String customName;
+
+  /// Whether the pillar is in play. A resting pillar keeps its base level
+  /// and habits for when it returns, but is hidden and counts toward
+  /// nothing. Changed only in Session Zero and at season rollover.
+  final bool isEnabled;
+
+  /// The name to show for the pillar.
+  String get name =>
+      customName.trim().isEmpty ? branch.displayName : customName.trim();
+
+  /// The [customName] to store when the user types [name] for [branch]:
+  /// trimmed and capped at [maxNameLength], or empty (the default name)
+  /// when blank or unchanged.
+  static String customNameFor(BranchType branch, String name) {
+    final trimmed = name.trim();
+    final capped = trimmed.length > maxNameLength
+        ? trimmed.substring(0, maxNameLength).trim()
+        : trimmed;
+    return capped == branch.displayName ? '' : capped;
+  }
 
   /// Level carried over from past seasons.
   final int baseLevel;
@@ -120,6 +165,8 @@ class BranchConfig {
     List<String>? buffs,
     List<String>? debuffs,
     int? forgedNodeCount,
+    String? customName,
+    bool? isEnabled,
   }) {
     return BranchConfig(
       branch: branch ?? this.branch,
@@ -127,6 +174,8 @@ class BranchConfig {
       buffs: buffs ?? this.buffs,
       debuffs: debuffs ?? this.debuffs,
       forgedNodeCount: forgedNodeCount ?? this.forgedNodeCount,
+      customName: customName ?? this.customName,
+      isEnabled: isEnabled ?? this.isEnabled,
     );
   }
 
@@ -136,11 +185,14 @@ class BranchConfig {
     'buffs': buffs,
     'debuffs': debuffs,
     'forgedNodeCount': forgedNodeCount,
+    if (customName.isNotEmpty) 'customName': customName,
+    'isEnabled': isEnabled,
   };
 
   /// Also reads the older single `buffText` / `debuffText` fields. Backups
   /// from before node forging count every earned node as forged, so their
-  /// levels are unchanged.
+  /// levels are unchanged; backups from before custom pillars have every
+  /// stored branch enabled.
   factory BranchConfig.fromJson(Map<String, dynamic> json) {
     List<String> strings(String listKey, String legacyKey) {
       final list = json[listKey] as List<dynamic>?;
@@ -155,6 +207,8 @@ class BranchConfig {
       buffs: strings('buffs', 'buffText'),
       debuffs: strings('debuffs', 'debuffText'),
       forgedNodeCount: json['forgedNodeCount'] as int? ?? 5,
+      customName: json['customName'] as String? ?? '',
+      isEnabled: json['isEnabled'] as bool? ?? true,
     );
   }
 
@@ -165,7 +219,9 @@ class BranchConfig {
       other.baseLevel == baseLevel &&
       _listEquals(other.buffs, buffs) &&
       _listEquals(other.debuffs, debuffs) &&
-      other.forgedNodeCount == forgedNodeCount;
+      other.forgedNodeCount == forgedNodeCount &&
+      other.customName == customName &&
+      other.isEnabled == isEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -174,6 +230,8 @@ class BranchConfig {
     Object.hashAll(buffs),
     Object.hashAll(debuffs),
     forgedNodeCount,
+    customName,
+    isEnabled,
   );
 }
 
@@ -183,24 +241,53 @@ class Character {
     required this.classTitle,
     this.signatureText = '',
     required this.currentSeasonId,
+    this.avatar,
+    this.reminderMinutes = defaultReminderMinutes,
   });
+
+  /// 8:00 pm, the daily keystone reminder's default time.
+  static const int defaultReminderMinutes = 20 * 60;
 
   final String name;
   final String classTitle;
   final String signatureText;
   final String currentSeasonId;
 
+  /// The pixel-art avatar picked in Session Zero or on the Character page;
+  /// null for characters who never picked one (see [avatarOrDefault]).
+  final AvatarSpec? avatar;
+
+  /// [avatar], or a stable one derived from the name.
+  AvatarSpec get avatarOrDefault => avatar ?? AvatarSpec.seeded(name);
+
+  /// Time of the daily keystone reminder in minutes after midnight, or null
+  /// when reminders are off.
+  final int? reminderMinutes;
+
+  /// This character with reminders at [minutes] (null switches them off).
+  Character withReminder(int? minutes) => Character(
+    name: name,
+    classTitle: classTitle,
+    signatureText: signatureText,
+    currentSeasonId: currentSeasonId,
+    avatar: avatar,
+    reminderMinutes: minutes,
+  );
+
   Character copyWith({
     String? name,
     String? classTitle,
     String? signatureText,
     String? currentSeasonId,
+    AvatarSpec? avatar,
   }) {
     return Character(
       name: name ?? this.name,
       classTitle: classTitle ?? this.classTitle,
       signatureText: signatureText ?? this.signatureText,
       currentSeasonId: currentSeasonId ?? this.currentSeasonId,
+      avatar: avatar ?? this.avatar,
+      reminderMinutes: reminderMinutes,
     );
   }
 
@@ -209,6 +296,8 @@ class Character {
     'classTitle': classTitle,
     'signatureText': signatureText,
     'currentSeasonId': currentSeasonId,
+    if (avatar != null) 'avatar': avatar!.toJson(),
+    'reminderMinutes': reminderMinutes,
   };
 
   factory Character.fromJson(Map<String, dynamic> json) => Character(
@@ -216,6 +305,13 @@ class Character {
     classTitle: json['classTitle'] as String,
     signatureText: json['signatureText'] as String? ?? '',
     currentSeasonId: json['currentSeasonId'] as String,
+    avatar: json['avatar'] == null
+        ? null
+        : AvatarSpec.fromJson(json['avatar'] as Map<String, dynamic>),
+    // Backups from before reminders get the default time.
+    reminderMinutes: json.containsKey('reminderMinutes')
+        ? json['reminderMinutes'] as int?
+        : defaultReminderMinutes,
   );
 
   @override
@@ -224,11 +320,19 @@ class Character {
       other.name == name &&
       other.classTitle == classTitle &&
       other.signatureText == signatureText &&
-      other.currentSeasonId == currentSeasonId;
+      other.currentSeasonId == currentSeasonId &&
+      other.avatar == avatar &&
+      other.reminderMinutes == reminderMinutes;
 
   @override
-  int get hashCode =>
-      Object.hash(name, classTitle, signatureText, currentSeasonId);
+  int get hashCode => Object.hash(
+    name,
+    classTitle,
+    signatureText,
+    currentSeasonId,
+    avatar,
+    reminderMinutes,
+  );
 }
 
 /// A stretch of days during which a habit was its branch's keystone.
@@ -284,7 +388,7 @@ class Habit {
   final bool isKeystone;
   final ActiveHalfMonth activeHalfMonth;
 
-  /// Deleted by the user but kept because it has logged history, so the
+  /// Archived by the user (or deleted with logged history): kept so the
   /// branch points (and keystone streaks) it earned still count.
   final bool isArchived;
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/rpg_models.dart';
+import '../providers/rpg_store_provider.dart';
 import '../theme/rpg_theme.dart';
 
 /// 1–5 star difficulty. Pass [onChanged] to make it tappable.
@@ -43,13 +45,13 @@ class DifficultyStars extends StatelessWidget {
 }
 
 /// Small pill with the branch's color dot and name.
-class BranchBadge extends StatelessWidget {
+class BranchBadge extends ConsumerWidget {
   const BranchBadge({super.key, required this.branch});
 
   final BranchType branch;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = branch.color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -68,7 +70,7 @@ class BranchBadge extends StatelessWidget {
           ),
           const SizedBox(width: 5),
           Text(
-            branch.displayName,
+            ref.watch(rpgStateProvider).nameOf(branch),
             style: RpgStyles.of(
               context,
             ).stat.copyWith(fontSize: 10, color: color),

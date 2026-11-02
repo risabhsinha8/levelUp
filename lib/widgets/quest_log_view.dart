@@ -199,7 +199,8 @@ class _MainQuestHeroCardState extends ConsumerState<MainQuestHeroCard>
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          'Main Quest complete! +1 Feat · ${quest.branch.displayName} '
+          'Main Quest complete! +1 Feat · '
+          '${ref.read(rpgStateProvider).nameOf(quest.branch)} '
           'Lv $before → $after',
         ),
         action: SnackBarAction(

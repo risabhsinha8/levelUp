@@ -73,7 +73,7 @@ void main() {
 
     test('bakes nodes + feats into base levels; level carries over', () {
       final bases = {
-        for (final b in BranchType.values)
+        for (final b in BranchType.defaults)
           b: result.state.configFor(b).baseLevel,
       };
       // The Jan 3 log is in Season 2; Body still ends on 17 days (2 nodes).

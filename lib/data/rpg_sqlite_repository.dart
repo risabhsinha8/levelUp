@@ -65,6 +65,8 @@ class RpgSqliteRepository implements RpgRepository {
         classTitle: c['class_title']! as String,
         signatureText: c['signature_text']! as String,
         currentSeasonId: currentSeasonId,
+        avatar: _decodeAvatar(c['avatar_data'] as String?),
+        reminderMinutes: c['reminder_minutes'] as int?,
       ),
       branchConfigs: [
         for (final row in await db.query('branch_configs'))
@@ -74,6 +76,8 @@ class RpgSqliteRepository implements RpgRepository {
             buffs: _decodeStrings(row['buff_text'] as String?),
             debuffs: _decodeStrings(row['debuff_text'] as String?),
             forgedNodeCount: row['forged_node_count']! as int,
+            customName: row['display_name']! as String,
+            isEnabled: row['is_enabled'] == 1,
           ),
       ]..sort((a, b) => a.branch.index.compareTo(b.branch.index)),
       habits: [
@@ -247,6 +251,16 @@ class RpgSqliteRepository implements RpgRepository {
   }
 
   @override
+  Future<void> renameBranch(BranchConfig config) async {
+    final db = await _db;
+    await db.insert(
+      'branch_configs',
+      _branchRow(config),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  @override
   Future<void> updateForgedNodes(BranchConfig config) async {
     final db = await _db;
     // A full row, so a branch with no stored row still gets its count.
@@ -352,6 +366,8 @@ class RpgSqliteRepository implements RpgRepository {
       'class_title': character.classTitle,
       'signature_text': character.signatureText,
       'current_season_id': character.currentSeasonId,
+      'avatar_data': _encodeAvatar(character.avatar),
+      'reminder_minutes': character.reminderMinutes,
     });
   }
 
@@ -429,6 +445,8 @@ class RpgSqliteRepository implements RpgRepository {
       'signature_data': _encodeOath(c.currentSeasonId, currentOath),
       'current_season_id': c.currentSeasonId,
       'signature_text': c.signatureText,
+      'avatar_data': _encodeAvatar(c.avatar),
+      'reminder_minutes': c.reminderMinutes,
     });
 
     for (final s in state.seasons) {
@@ -571,12 +589,21 @@ class RpgSqliteRepository implements RpgRepository {
     'summary_data': s.summary == null ? null : jsonEncode(s.summary!.toJson()),
   };
 
+  static String? _encodeAvatar(AvatarSpec? avatar) =>
+      avatar == null ? null : jsonEncode(avatar.toJson());
+
+  static AvatarSpec? _decodeAvatar(String? data) => data == null
+      ? null
+      : AvatarSpec.fromJson(jsonDecode(data) as Map<String, dynamic>);
+
   static Map<String, Object?> _branchRow(BranchConfig c) => {
     'branch': c.branch.name,
     'base_level': c.baseLevel,
     'buff_text': jsonEncode(c.buffs),
     'debuff_text': jsonEncode(c.debuffs),
     'forged_node_count': c.forgedNodeCount,
+    'display_name': c.customName,
+    'is_enabled': c.isEnabled ? 1 : 0,
   };
 
   static Map<String, Object?> _habitRow(Habit h) => {

@@ -10,7 +10,8 @@ import '../../theme/rpg_theme.dart';
 import '../../widgets/settings_section.dart';
 import 'onboarding_steps.dart';
 
-/// "Session Zero": a 5-step wizard shown while no character exists. On
+/// "Session Zero": a 5-step wizard shown while no character exists (step 1
+/// also picks and names the pillars). On
 /// "Begin Season 1" everything is written to SQLite in one transaction and
 /// the root gate switches to `HomeShell`.
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -34,8 +35,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _saving = false;
 
   // Step 1
+  late AvatarSpec _avatar = AvatarSpec.random(ref.read(randomProvider));
   final _name = TextEditingController();
   final _class = TextEditingController();
+  final _pillars = {...BranchType.defaults};
+  final _pillarNames = {
+    for (final b in BranchType.values) b: TextEditingController(),
+  };
   // Step 2
   final _keystoneTitles = {
     for (final b in BranchType.values) b: TextEditingController(),
@@ -52,7 +58,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   BranchType _questBranch = BranchType.mind;
   int _questDifficulty = 3;
   // Step 4
-  final _loot = {for (final t in LootTier.values) t: TextEditingController()};
+  final _loot = {for (final t in LootTier.values) t: <String>[]};
+  final _lootDrafts = {
+    for (final t in LootTier.values) t: TextEditingController(),
+  };
   // Step 5: signature strokes, normalized to 0–1 of the pad.
   final List<List<Offset>> _strokes = [];
 
@@ -66,17 +75,42 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _debuff,
       _questTitle,
       _questReward,
+      ..._pillarNames.values,
       ..._keystoneTitles.values,
       ..._keystoneTargets.values,
-      ..._loot.values,
+      ..._lootDrafts.values,
     ]) {
       c.dispose();
     }
     super.dispose();
   }
 
+  /// The chosen pillars, in branch order.
+  List<BranchType> get _branches => [
+    for (final b in BranchType.values)
+      if (_pillars.contains(b)) b,
+  ];
+
+  /// Display names of the chosen pillars, in branch order.
+  Map<BranchType, String> get _names => {
+    for (final b in _branches)
+      b: BranchConfig(
+        branch: b,
+        customName: BranchConfig.customNameFor(b, _pillarNames[b]!.text),
+      ).name,
+  };
+
+  void _togglePillar(BranchType branch) {
+    setState(() {
+      if (!_pillars.remove(branch)) _pillars.add(branch);
+      final first = _branches.first;
+      if (!_pillars.contains(_modifierBranch)) _modifierBranch = first;
+      if (!_pillars.contains(_questBranch)) _questBranch = first;
+    });
+  }
+
   List<KeystoneChoice> get _keystones => [
-    for (final branch in BranchType.values)
+    for (final branch in _branches)
       if (_keystoneTitles[branch]!.text.trim().isNotEmpty)
         KeystoneChoice(
           branch: branch,
@@ -94,17 +128,38 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           rewardText: _questReward.text.trim(),
         );
 
-  List<LootChoice> get _lootChoices => [
+  /// Picked rewards per tier, plus any typed but not yet added.
+  Map<LootTier, List<String>> get _lootByTier => {
     for (final tier in LootTier.values)
-      if (_loot[tier]!.text.trim().isNotEmpty)
-        LootChoice(tier: tier, title: _loot[tier]!.text.trim()),
+      tier: {
+        ..._loot[tier]!,
+        _lootDrafts[tier]!.text.trim(),
+      }.where((t) => t.isNotEmpty).toList(),
+  };
+
+  List<LootChoice> get _lootChoices => [
+    for (final MapEntry(key: tier, value: titles) in _lootByTier.entries)
+      for (final title in titles) LootChoice(tier: tier, title: title),
   ];
+
+  void _toggleLoot(LootTier tier, String title) => setState(() {
+    final picked = _loot[tier]!;
+    if (!picked.remove(title)) picked.add(title);
+  });
+
+  void _addLoot(LootTier tier) => setState(() {
+    final title = _lootDrafts[tier]!.text.trim();
+    if (title.isNotEmpty && !_loot[tier]!.contains(title)) {
+      _loot[tier]!.add(title);
+    }
+    _lootDrafts[tier]!.clear();
+  });
 
   bool get _stepComplete => switch (_step) {
     0 => _name.text.trim().isNotEmpty && _class.text.trim().isNotEmpty,
     1 => _keystones.isNotEmpty,
     2 => true,
-    3 => _lootChoices.length == LootTier.values.length,
+    3 => _lootByTier.values.every((titles) => titles.isNotEmpty),
     _ => _strokes.isNotEmpty,
   };
 
@@ -136,6 +191,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           .completeOnboarding(
             name: _name.text.trim(),
             classTitle: _class.text.trim(),
+            avatar: _avatar,
+            activeBranches: _branches,
+            branchNames: {
+              for (final b in BranchType.values) b: _pillarNames[b]!.text,
+            },
             keystones: _keystones,
             modifiers: [
               ModifierChoice(
@@ -186,8 +246,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
                   RollCharacterStep(
+                    avatar: _avatar,
+                    onAvatarChanged: (a) => setState(() => _avatar = a),
                     name: _name,
                     classTitle: _class,
+                    pillars: _pillars,
+                    pillarNames: _pillarNames,
+                    onTogglePillar: _togglePillar,
                     onChanged: () => setState(() {}),
                     onRestore: () => showDialog<void>(
                       context: context,
@@ -195,11 +260,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                   KeystonesStep(
+                    branches: _branches,
+                    names: _names,
                     titles: _keystoneTitles,
                     targets: _keystoneTargets,
                     onChanged: () => setState(() {}),
                   ),
                   BuffsAndQuestStep(
+                    branches: _branches,
+                    names: _names,
                     modifierBranch: _modifierBranch,
                     buff: _buff,
                     debuff: _debuff,
@@ -215,10 +284,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         setState(() => _questDifficulty = d),
                     onChanged: () => setState(() {}),
                   ),
-                  LootVaultStep(loot: _loot, onChanged: () => setState(() {})),
+                  LootVaultStep(
+                    rewards: _loot,
+                    drafts: _lootDrafts,
+                    onToggle: _toggleLoot,
+                    onAdd: _addLoot,
+                    onChanged: () => setState(() {}),
+                  ),
                   SignOathStep(
                     name: _name.text.trim(),
                     classTitle: _class.text.trim(),
+                    avatar: _avatar,
+                    names: _names,
                     keystones: _keystones,
                     mainQuest: _mainQuest,
                     lootCount: _lootChoices.length,

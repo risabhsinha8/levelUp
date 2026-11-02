@@ -77,6 +77,7 @@ class _MidMonthReflectionCardState
         halfTwoLabel:
             'Days ${ActiveHalfMonth.firstHalfLastDay + 1}–'
             '${widget.daysInMonth}',
+        nameOf: ref.read(rpgStateProvider).nameOf,
       ),
     );
     if (result == null || !mounted) return;
@@ -114,7 +115,7 @@ class _MidMonthReflectionCardState
       },
     );
     final candidates = [
-      for (final branch in BranchType.values)
+      for (final branch in state.activeBranches)
         for (final h in state.habits)
           if (h.branch == branch &&
               !h.isKeystone &&
@@ -239,10 +240,15 @@ class _PivotRequest {
 }
 
 class _PivotDialog extends StatefulWidget {
-  const _PivotDialog({required this.candidates, required this.halfTwoLabel});
+  const _PivotDialog({
+    required this.candidates,
+    required this.halfTwoLabel,
+    required this.nameOf,
+  });
 
   final List<Habit> candidates;
   final String halfTwoLabel;
+  final String Function(BranchType) nameOf;
 
   @override
   State<_PivotDialog> createState() => _PivotDialogState();
@@ -287,7 +293,7 @@ class _PivotDialogState extends State<_PivotDialog> {
                   DropdownMenuItem(
                     value: h,
                     child: Text(
-                      '${h.title} (${h.branch.displayName})',
+                      '${h.title} (${widget.nameOf(h.branch)})',
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -303,7 +309,7 @@ class _PivotDialogState extends State<_PivotDialog> {
                 labelText: 'New habit',
                 helperText: _old == null
                     ? null
-                    : 'Joins the ${_old!.branch.displayName} branch',
+                    : 'Joins the ${widget.nameOf(_old!.branch)} branch',
               ),
             ),
             const SizedBox(height: 12),

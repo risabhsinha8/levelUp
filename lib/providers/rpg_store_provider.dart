@@ -5,10 +5,12 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../data/reminder_scheduler.dart';
 import '../data/rpg_repository.dart';
 import '../data/rpg_sqlite_repository.dart';
 import '../domain/character_sheet.dart';
 import '../domain/new_character.dart';
+import '../domain/reminder_plan.dart';
 import '../domain/season_rollover.dart';
 import '../models/rpg_models.dart';
 import '../models/rpg_state.dart';
@@ -123,10 +125,28 @@ final characterSheetProvider = Provider<AsyncValue<CharacterSheet>>((ref) {
   return AsyncData(CharacterSheet.fromState(state, now));
 });
 
+/// Local notifications for this device. Override in tests with a fake.
+final reminderSchedulerProvider = Provider<ReminderScheduler>(
+  (ref) => LocalNotificationScheduler.isSupported
+      ? LocalNotificationScheduler()
+      : const NoopReminderScheduler(),
+);
+
+/// The notifications that should be pending now. Rebuilt on every state
+/// change and at midnight; `RootGate` hands each new plan to
+/// [reminderSchedulerProvider]. Empty while there is no character.
+final reminderPlanProvider = Provider<ReminderPlan>((ref) {
+  ref.watch(todayProvider);
+  final state = ref.watch(rpgStoreProvider).value;
+  if (state == null) return ReminderPlan.empty;
+  return ReminderPlanner.plan(state, ref.read(clockProvider)());
+});
+
 /// What forging a skill node changed, for the celebration overlay.
 class NodeForgeResult {
   const NodeForgeResult({
     required this.branch,
+    required this.branchName,
     required this.nodeIndex,
     required this.oldBranchLevel,
     required this.newBranchLevel,
@@ -136,6 +156,9 @@ class NodeForgeResult {
   });
 
   final BranchType branch;
+
+  /// The character's name for [branch].
+  final String branchName;
 
   /// 0-based index of the node just forged.
   final int nodeIndex;
@@ -170,11 +193,15 @@ class RpgStore extends AsyncNotifier<RpgState?> {
   Future<RpgState?> build() => _repository.loadFullState();
 
   /// Finishes Session Zero: creates the character, Season 1 (the current
-  /// calendar quarter), keystones, buffs/debuffs, main quest, loot table and
-  /// signed oath in one SQLite transaction, then reloads from storage.
+  /// calendar quarter), chosen pillars, keystones, buffs/debuffs, main quest,
+  /// loot table and signed oath in one SQLite transaction, then reloads from
+  /// storage.
   Future<void> completeOnboarding({
     required String name,
     required String classTitle,
+    AvatarSpec? avatar,
+    List<BranchType> activeBranches = BranchType.defaults,
+    Map<BranchType, String> branchNames = const {},
     required List<KeystoneChoice> keystones,
     MainQuestChoice? mainQuest,
     List<LootChoice> loot = const [],
@@ -184,6 +211,9 @@ class RpgStore extends AsyncNotifier<RpgState?> {
     final initial = buildNewCharacterState(
       name: name,
       classTitle: classTitle,
+      avatar: avatar,
+      activeBranches: activeBranches,
+      branchNames: branchNames,
       keystones: keystones,
       mainQuest: mainQuest,
       loot: loot,
@@ -226,7 +256,8 @@ class RpgStore extends AsyncNotifier<RpgState?> {
   /// Starring a habit unstars the branch's previous active keystone; both
   /// changes are recorded from today on, so Common Keys already earned stay.
   /// A habit with check-ins can't change branch (that would move its past
-  /// points); doing so throws an [ArgumentError]. Returns the habit's id.
+  /// points), and habits can't join a resting pillar; both throw an
+  /// [ArgumentError]. Returns the habit's id.
   Future<String> addOrUpdateHabit({
     String? id,
     required BranchType branch,
@@ -239,6 +270,7 @@ class RpgStore extends AsyncNotifier<RpgState?> {
     final habitId = id ?? _uuid.v4();
     final changed = <Habit>[];
     await _update((state) {
+      _checkActive(state, branch);
       final existing = state.habits.where((h) => h.id == habitId).firstOrNull;
       if (existing != null &&
           existing.branch != branch &&
@@ -247,7 +279,7 @@ class RpgStore extends AsyncNotifier<RpgState?> {
           branch,
           'branch',
           '"${existing.title}" has check-ins counted toward '
-              '${existing.branch.displayName}',
+              '${state.nameOf(existing.branch)}',
         );
       }
       final habit =
@@ -329,6 +361,38 @@ class RpgStore extends AsyncNotifier<RpgState?> {
     return outcome;
   }
 
+  /// Archives [habitId] whether or not it was ever checked off: it leaves
+  /// the daily list but its history and branch points stay, and it can be
+  /// restored. A keystone loses its star from today on.
+  Future<void> archiveHabit(String habitId) {
+    late Habit archived;
+    return _update((state) {
+      final habit = state.habits.where((h) => h.id == habitId).firstOrNull;
+      if (habit == null || habit.isArchived) return state;
+      archived = habit
+          .withKeystone(false, toDateString(_now))
+          .copyWith(isArchived: true);
+      return state.copyWith(
+        habits: [for (final h in state.habits) h.id == habitId ? archived : h],
+      );
+    }, (repo) => repo.upsertHabit(archived));
+  }
+
+  /// Brings an archived habit back to the daily list (without its star).
+  /// Throws an [ArgumentError] while its pillar is resting.
+  Future<void> restoreHabit(String habitId) {
+    late Habit restored;
+    return _update((state) {
+      final habit = state.habits.where((h) => h.id == habitId).firstOrNull;
+      if (habit == null || !habit.isArchived) return state;
+      _checkActive(state, habit.branch);
+      restored = habit.copyWith(isArchived: false);
+      return state.copyWith(
+        habits: [for (final h in state.habits) h.id == habitId ? restored : h],
+      );
+    }, (repo) => repo.upsertHabit(restored));
+  }
+
   Future<void> completeQuest(String questId) =>
       setQuestCompleted(questId, completed: true);
 
@@ -348,6 +412,7 @@ class RpgStore extends AsyncNotifier<RpgState?> {
 
   /// Adds a quest and returns its id. A new main quest replaces the month's
   /// existing one, which becomes a side quest (one main quest per month).
+  /// Throws an [ArgumentError] for a resting pillar.
   Future<String> addQuest({
     required String title,
     required BranchType branch,
@@ -358,6 +423,7 @@ class RpgStore extends AsyncNotifier<RpgState?> {
   }) async {
     late Quest quest;
     await _update((state) {
+      _checkActive(state, branch);
       quest = Quest(
         id: _uuid.v4(),
         title: title,
@@ -431,7 +497,8 @@ class RpgStore extends AsyncNotifier<RpgState?> {
 
   /// Forges the next earned-but-unforged node of [branch]: +1 level and a
   /// Rare Key (plus an Epic Key for a branch's 5th node and the Legendary
-  /// Key for the 25th). Returns null when no node is ready to forge.
+  /// Key for the last node across the active pillars). Returns null when no
+  /// node is ready to forge.
   Future<NodeForgeResult?> forgeNode(BranchType branch) async {
     NodeForgeResult? result;
     late BranchConfig config;
@@ -454,6 +521,7 @@ class RpgStore extends AsyncNotifier<RpgState?> {
           sheet.lootKeys[tier]!.earned;
       result = NodeForgeResult(
         branch: branch,
+        branchName: state.nameOf(branch),
         nodeIndex: stats.forgedNodes,
         oldBranchLevel: stats.level,
         newBranchLevel: after.branches[branch]!.level,
@@ -566,6 +634,35 @@ class RpgStore extends AsyncNotifier<RpgState?> {
     }, (repo) => repo.updateBranchBuffDebuff(config));
   }
 
+  /// Renames [branch]; a blank name (or its default one) restores the
+  /// default. Allowed any time, since names are display-only.
+  Future<void> renameBranch(BranchType branch, String name) {
+    late BranchConfig config;
+    return _update((state) {
+      final current = state.configFor(branch);
+      final customName = BranchConfig.customNameFor(branch, name);
+      if (current.customName == customName) return state;
+      config = current.copyWith(customName: customName);
+      return state.copyWith(
+        branchConfigs: [
+          for (final c in state.branchConfigs)
+            if (c.branch != branch) c,
+          config,
+        ]..sort((a, b) => a.branch.index.compareTo(b.branch.index)),
+      );
+    }, (repo) => repo.renameBranch(config));
+  }
+
+  static void _checkActive(RpgState state, BranchType branch) {
+    if (!state.configFor(branch).isEnabled) {
+      throw ArgumentError.value(
+        branch,
+        'branch',
+        '${state.nameOf(branch)} is resting this season',
+      );
+    }
+  }
+
   /// Seals the current season's oath with the drawn [strokes].
   Future<void> signSeasonOath(List<List<double>> strokes) =>
       _setOath(SeasonOath(strokes: strokes, signedAtDate: toDateString(_now)));
@@ -590,13 +687,21 @@ class RpgStore extends AsyncNotifier<RpgState?> {
   }
 
   /// Ends the current season, bakes its points into each branch's base
-  /// level and starts the next quarter's season.
+  /// level and starts the next quarter's season with [activeBranches] in
+  /// play (unchanged when null).
   /// Throws a [StateError] while the season's quarter is still running.
-  Future<SeasonRolloverResult> completeSeason() async {
+  Future<SeasonRolloverResult> completeSeason({
+    Set<BranchType>? activeBranches,
+  }) async {
     late SeasonRolloverResult result;
     await _update(
       (state) {
-        result = SeasonRollover.apply(state, _now, newSeasonId: _uuid.v4());
+        result = SeasonRollover.apply(
+          state,
+          _now,
+          newSeasonId: _uuid.v4(),
+          activeBranches: activeBranches,
+        );
         return result.state;
       },
       (repo) => repo.prestigeSeason(
@@ -611,6 +716,26 @@ class RpgStore extends AsyncNotifier<RpgState?> {
     late Character character;
     return _update((state) {
       character = state.character.copyWith(name: name, classTitle: classTitle);
+      return state.copyWith(character: character);
+    }, (repo) => repo.updateCharacter(character));
+  }
+
+  Future<void> updateAvatar(AvatarSpec avatar) {
+    late Character character;
+    return _update((state) {
+      if (state.character.avatar == avatar) return state;
+      character = state.character.copyWith(avatar: avatar);
+      return state.copyWith(character: character);
+    }, (repo) => repo.updateCharacter(character));
+  }
+
+  /// Sets the daily reminder time (minutes after midnight), or switches
+  /// reminders off with null.
+  Future<void> setReminderTime(int? minutes) {
+    late Character character;
+    return _update((state) {
+      if (state.character.reminderMinutes == minutes) return state;
+      character = state.character.withReminder(minutes);
       return state.copyWith(character: character);
     }, (repo) => repo.updateCharacter(character));
   }

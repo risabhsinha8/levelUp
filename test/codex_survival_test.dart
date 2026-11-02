@@ -34,7 +34,10 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.text('Completing all 25 nodes across the entire Skill Tree.'),
+        find.text(
+          'Completing every node across the entire Skill Tree (25 with five '
+          'pillars).',
+        ),
         findsOneWidget,
       );
     });

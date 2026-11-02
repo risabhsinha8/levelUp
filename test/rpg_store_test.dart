@@ -50,7 +50,8 @@ void main() {
 
     test('unlocks the 5- and 15-day nodes on some branches', () {
       final nodes = {
-        for (final s in sheet.branches.values) s.branch: s.unlockedNodes,
+        for (final b in sheet.activeBranches)
+          b: sheet.branches[b]!.unlockedNodes,
       };
       expect(nodes, {
         BranchType.mind: 2,
@@ -62,7 +63,7 @@ void main() {
     });
 
     test('every branch has buffs, debuffs and exactly one keystone', () {
-      for (final branch in BranchType.values) {
+      for (final branch in demo.activeBranches) {
         final config = demo.configFor(branch);
         expect(config.buffs, isNotEmpty);
         expect(config.debuffs, isNotEmpty);
@@ -127,7 +128,8 @@ void main() {
       expect(state.habits.map((h) => h.title), ['Read', 'Walk']);
       expect(state.habits.every((h) => h.isKeystone), isTrue);
       expect(state.keystoneFor(BranchType.body)!.targetCriteria, '20 min');
-      expect(state.branchConfigs.map((c) => c.baseLevel), [0, 0, 0, 0, 0]);
+      expect(state.branchConfigs.map((c) => c.baseLevel), everyElement(0));
+      expect(state.activeBranches, BranchType.defaults);
       final sheet = container.read(characterSheetProvider).value!;
       expect(sheet.totalLevel, 0);
       expect(sheet.seasonDay, 24);
@@ -486,7 +488,7 @@ void main() {
         buffs: ['Desk cleared'],
       );
       final configs = repo.saved!.branchConfigs;
-      expect(configs.map((c) => c.branch), BranchType.values);
+      expect(configs.map((c) => c.branch), BranchType.defaults);
       expect(repo.saved!.configFor(BranchType.craft).buffs, ['Desk cleared']);
       expect(repo.saved!.configFor(BranchType.craft).debuffs, [
         'Waiting for the "perfect" idea',

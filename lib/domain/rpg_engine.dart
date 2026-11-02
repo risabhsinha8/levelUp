@@ -128,6 +128,24 @@ abstract final class RpgEngine {
     }.length;
   }
 
+  /// Longest run of consecutive calendar days among [dateStrings]
+  /// (`YYYY-MM-DD`, any order, duplicates ignored). A best to celebrate,
+  /// never a streak to lose.
+  static int calculateLongestRun(Iterable<String> dateStrings) {
+    final dates = dateStrings.toSet().map(parseDateString).toList()..sort();
+    var best = 0;
+    var run = 0;
+    DateTime? previous;
+    for (final date in dates) {
+      run = previous != null && date.difference(previous).inDays == 1
+          ? run + 1
+          : 1;
+      best = math.max(best, run);
+      previous = date;
+    }
+    return best;
+  }
+
   /// Number of skill nodes (0 to 5) unlocked by [activeDays].
   static int calculateUnlockedNodes(int activeDays) {
     return nodeThresholds.where((threshold) => activeDays >= threshold).length;
@@ -329,8 +347,11 @@ abstract final class RpgEngine {
   ///   keystone.
   /// - Rare: every forged skill node.
   /// - Epic: every branch with all 5 nodes forged.
-  /// - Legendary: all 25 nodes forged across all 5 branches.
+  /// - Legendary: all nodes forged in every active branch (25 across the
+  ///   five core branches).
   ///
+  /// Only [branches] count: the character's active pillars, by default
+  /// the five core ones ([BranchType.defaults]).
   /// [forgedNodeCounts] holds each branch's forged node count; without it
   /// every unlocked node counts as forged. Claimed counts come from the
   /// claimed items in [claimedLoot] (unclaimed items are ignored); when
@@ -341,33 +362,40 @@ abstract final class RpgEngine {
     required List<LootItem> claimedLoot,
     Map<BranchType, int>? forgedNodeCounts,
     Season? season,
+    List<BranchType> branches = BranchType.defaults,
   }) {
+    final counted = branches.toSet();
     final commonEarned = habits
-        .where((h) => h.hasKeystoneHistory)
+        .where((h) => h.hasKeystoneHistory && counted.contains(h.branch))
         .fold(
           0,
           (sum, h) =>
               sum + calculateKeystoneCommonKeys(h, logs, season: season),
         );
 
-    final nodesPerBranch =
-        calculateAllBranchActiveDays(habits, logs, season: season).map((
-          branch,
-          days,
-        ) {
-          final unlocked = calculateUnlockedNodes(days);
-          final forged = forgedNodeCounts?[branch];
-          return MapEntry(
-            branch,
-            forged == null ? unlocked : calculateForgedNodes(unlocked, forged),
-          );
-        });
+    final activeDays = calculateAllBranchActiveDays(
+      habits,
+      logs,
+      season: season,
+    );
+    final nodesPerBranch = [
+      for (final branch in counted)
+        if (forgedNodeCounts?[branch] case final forged?)
+          calculateForgedNodes(
+            calculateUnlockedNodes(activeDays[branch]!),
+            forged,
+          )
+        else
+          calculateUnlockedNodes(activeDays[branch]!),
+    ];
 
-    final rareEarned = nodesPerBranch.values.fold(0, (sum, n) => sum + n);
-    final epicEarned = nodesPerBranch.values
+    final rareEarned = nodesPerBranch.fold(0, (sum, n) => sum + n);
+    final epicEarned = nodesPerBranch
         .where((n) => n == maxNodesPerBranch)
         .length;
-    final legendaryEarned = epicEarned == BranchType.values.length ? 1 : 0;
+    final legendaryEarned = counted.isNotEmpty && epicEarned == counted.length
+        ? 1
+        : 0;
 
     final earned = {
       LootTier.common: commonEarned,

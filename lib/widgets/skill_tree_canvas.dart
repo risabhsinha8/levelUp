@@ -24,8 +24,9 @@ NodeState nodeStateFor(BranchStats stats, int index) {
   return NodeState.locked;
 }
 
-/// The 5 branches side by side, each with 5 milestone nodes growing upward
-/// from a root, joined by energy paths that fill as active days accrue.
+/// The active pillars side by side, each with 5 milestone nodes growing
+/// upward from a root, joined by energy paths that fill as active days
+/// accrue. Scrolls sideways when the columns would be too narrow.
 class SkillTreeCanvas extends StatelessWidget {
   const SkillTreeCanvas({super.key, required this.sheet, this.onForge});
 
@@ -38,6 +39,7 @@ class SkillTreeCanvas extends StatelessWidget {
   static const double nodeSize = 46;
   static const double _top = 30;
   static const double _rootArea = 64;
+  static const double _minColumnWidth = 58;
 
   static double _nodeY(int index) {
     const bottom = height - _rootArea - nodeSize / 2 - 8;
@@ -52,10 +54,16 @@ class SkillTreeCanvas extends StatelessWidget {
       height: height,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final columnWidth = constraints.maxWidth / BranchType.values.length;
-          double columnX(BranchType b) => columnWidth * (b.index + 0.5);
+          final branches = sheet.activeBranches;
+          final width = math.max(
+            constraints.maxWidth,
+            _minColumnWidth * branches.length,
+          );
+          final columnWidth = width / branches.length;
+          double columnX(BranchType b) =>
+              columnWidth * (branches.indexOf(b) + 0.5);
 
-          return TweenAnimationBuilder<double>(
+          final tree = TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: const Duration(milliseconds: 1200),
             curve: Curves.easeOutCubic,
@@ -73,7 +81,7 @@ class SkillTreeCanvas extends StatelessWidget {
                     ),
                   ),
                 ),
-                for (final branch in BranchType.values) ...[
+                for (final branch in branches) ...[
                   for (var i = 0; i < RpgEngine.maxNodesPerBranch; i++)
                     Positioned(
                       left: columnX(branch) - nodeSize / 2,
@@ -109,6 +117,11 @@ class SkillTreeCanvas extends StatelessWidget {
               ],
             ),
           );
+          if (width <= constraints.maxWidth) return tree;
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(width: width, child: tree),
+          );
         },
       ),
     );
@@ -139,7 +152,7 @@ class _BranchRoot extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          stats.branch.displayName.toUpperCase(),
+          stats.name.toUpperCase(),
           maxLines: 1,
           overflow: TextOverflow.fade,
           softWrap: false,
@@ -185,7 +198,7 @@ class _EnergyPathPainter extends CustomPainter {
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
-    // Ground line joining the five roots.
+    // Ground line joining the roots.
     canvas.drawLine(
       Offset(columnWidth * 0.5, rootY),
       Offset(size.width - columnWidth * 0.5, rootY),
@@ -193,9 +206,9 @@ class _EnergyPathPainter extends CustomPainter {
     );
     dim.color = RpgColors.outline;
 
-    for (final branch in BranchType.values) {
+    for (final (column, branch) in sheet.activeBranches.indexed) {
       final stats = sheet.branches[branch]!;
-      final x = columnWidth * (branch.index + 0.5);
+      final x = columnWidth * (column + 0.5);
       final color = branch.color;
       final glow = Paint()
         ..color = color.withValues(alpha: 0.55)
@@ -307,7 +320,7 @@ class SkillNode extends StatelessWidget {
     if (state == NodeState.readyToForge) {
       return ForgeableNode(
         color: color,
-        label: '${stats.branch.displayName} node ${index + 1}, ready to forge',
+        label: '${stats.name} node ${index + 1}, ready to forge',
         onTap: onTap,
         onForge: onForge,
       );
@@ -315,13 +328,13 @@ class SkillNode extends StatelessWidget {
 
     // Ready nodes returned above; they share the forged arms below.
     final label = switch (state) {
-      NodeState.unlocked || NodeState.readyToForge =>
-        '${stats.branch.displayName} node ${index + 1}, unlocked',
+      NodeState.unlocked ||
+      NodeState.readyToForge => '${stats.name} node ${index + 1}, unlocked',
       NodeState.inProgress =>
-        '${stats.branch.displayName} node ${index + 1}, '
+        '${stats.name} node ${index + 1}, '
             '${stats.activeDays} of $threshold days',
       NodeState.locked =>
-        '${stats.branch.displayName} node ${index + 1}, locked, '
+        '${stats.name} node ${index + 1}, locked, '
             'unlocks at $threshold days',
     };
 
@@ -726,7 +739,7 @@ class NodeDetailSheet extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${branch.displayName} · Node ${index + 1}',
+                    '${stats.name} · Node ${index + 1}',
                     style: theme.textTheme.titleLarge?.copyWith(color: color),
                   ),
                 ),
@@ -764,7 +777,7 @@ class NodeDetailSheet extends ConsumerWidget {
             const SizedBox(height: 6),
             Text(
               '${math.min(stats.activeDays, threshold)}/$threshold '
-              '${branch.displayName} active days this season',
+              '${stats.name} active days this season',
               style: styles.stat,
             ),
             const SizedBox(height: 4),
@@ -785,10 +798,10 @@ class NodeDetailSheet extends ConsumerWidget {
             if (habits.isEmpty)
               EmptyPrompt(
                 icon: LucideIcons.sprout,
-                title: 'No ${branch.displayName} habits yet',
+                title: 'No ${stats.name} habits yet',
                 message:
                     "Add one from Today's Focus to start earning "
-                    '${branch.displayName} days.',
+                    '${stats.name} days.',
                 compact: true,
                 color: color,
               )
@@ -812,7 +825,7 @@ class NodeDetailSheet extends ConsumerWidget {
                           children: [
                             Text(
                               habit.isArchived
-                                  ? '${habit.title} (deleted)'
+                                  ? '${habit.title} (archived)'
                                   : habit.title,
                             ),
                             if (habit.targetCriteria.isNotEmpty)

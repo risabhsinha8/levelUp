@@ -28,7 +28,7 @@ class CampfireBanner extends ConsumerWidget {
     final state = ref.watch(rpgStateProvider);
     final today = ref.watch(todayProvider);
     final struggling = RpgEngine.findStrugglingHabits(
-      state.habits,
+      state.activeHabits,
       state.logs,
       today,
     );
@@ -134,8 +134,11 @@ class _CampfireSheetState extends ConsumerState<CampfireSheet> {
     final messenger = ScaffoldMessenger.of(context);
     final replacement = await showDialog<(String, String)>(
       context: context,
-      builder: (_) =>
-          _ReplacementDialog(habit: habit, halfTwoLabel: _halfTwoLabel),
+      builder: (_) => _ReplacementDialog(
+        habit: habit,
+        branchName: ref.read(rpgStateProvider).nameOf(habit.branch),
+        halfTwoLabel: _halfTwoLabel,
+      ),
     );
     if (replacement == null || !mounted) return;
     final (title, target) = replacement;
@@ -170,7 +173,7 @@ class _CampfireSheetState extends ConsumerState<CampfireSheet> {
     final state = ref.watch(rpgStateProvider);
     final today = ref.watch(todayProvider);
     final struggling = RpgEngine.findStrugglingHabits(
-      state.habits,
+      state.activeHabits,
       state.logs,
       today,
     );
@@ -223,6 +226,7 @@ class _CampfireSheetState extends ConsumerState<CampfireSheet> {
               for (final s in struggling)
                 _StrugglingTile(
                   struggling: s,
+                  branchName: state.nameOf(s.habit.branch),
                   halfTwoLabel: _halfTwoLabel,
                   onPivot: () => _pivot(s.habit),
                 ),
@@ -262,11 +266,13 @@ class _CampfireSheetState extends ConsumerState<CampfireSheet> {
 class _StrugglingTile extends StatelessWidget {
   const _StrugglingTile({
     required this.struggling,
+    required this.branchName,
     required this.halfTwoLabel,
     required this.onPivot,
   });
 
   final StrugglingHabit struggling;
+  final String branchName;
   final String halfTwoLabel;
   final VoidCallback onPivot;
 
@@ -335,7 +341,7 @@ class _StrugglingTile extends StatelessWidget {
               ),
             ],
           ),
-          Text(habit.branch.displayName, style: styles.stat),
+          Text(branchName, style: styles.stat),
           const SizedBox(height: 8),
           action,
         ],
@@ -346,9 +352,14 @@ class _StrugglingTile extends StatelessWidget {
 
 /// Asks for the Half 2 replacement's title and target.
 class _ReplacementDialog extends StatefulWidget {
-  const _ReplacementDialog({required this.habit, required this.halfTwoLabel});
+  const _ReplacementDialog({
+    required this.habit,
+    required this.branchName,
+    required this.halfTwoLabel,
+  });
 
   final Habit habit;
+  final String branchName;
   final String halfTwoLabel;
 
   @override
@@ -379,7 +390,7 @@ class _ReplacementDialogState extends State<_ReplacementDialog> {
           children: [
             Text(
               '${widget.habit.title} stays in Days 1–15 with its points. '
-              'The new ${widget.habit.branch.displayName} habit runs '
+              'The new ${widget.branchName} habit runs '
               '${widget.halfTwoLabel}.',
               style: styles.stat,
             ),

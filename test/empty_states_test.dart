@@ -46,6 +46,16 @@ Future<void> visitEverything(WidgetTester tester) async {
 
   // Season Tally.
   await tapAndSettle(find.text('Season Tally').last);
+
+  // Character page and the avatar editor.
+  await tapAndSettle(find.byKey(const ValueKey('header-avatar')));
+  await tapAndSettle(find.byKey(const ValueKey('edit-avatar')));
+  await tapAndSettle(find.text('Save Avatar'));
+  await tapAndSettle(find.byKey(const ValueKey('open-habit-history')));
+  await tester.pageBack();
+  await tester.pumpAndSettle();
+  await tester.pageBack();
+  await tester.pumpAndSettle();
 }
 
 void main() {

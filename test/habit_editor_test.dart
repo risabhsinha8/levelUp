@@ -148,21 +148,21 @@ void main() {
     await flushSnackBars(tester);
   });
 
-  testWidgets('deleting a habit hides it but keeps its points', (tester) async {
+  testWidgets('archiving a habit hides it but keeps its points', (
+    tester,
+  ) async {
     await pumpToday(tester);
-    final levelBefore = find.bySemanticsLabel('Level 9');
-    expect(levelBefore, findsOneWidget);
+    expect(find.bySemanticsLabel('Level 9'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Edit Water'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete'));
-    await tester.pumpAndSettle();
-    expect(find.text('Delete "Water"?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    // Water has check-ins, so it can only be archived.
+    expect(find.text('Delete'), findsNothing);
+    await tester.tap(find.text('Archive'));
     await tester.pumpAndSettle();
 
     expect(find.text('Water'), findsNothing);
-    expect(find.text('Deleted "Water".'), findsOneWidget);
+    expect(find.text('Archived "Water".'), findsOneWidget);
     expect(
       readState(
         tester,
@@ -171,12 +171,57 @@ void main() {
     );
     expect(find.bySemanticsLabel('Level 9'), findsOneWidget);
 
-    // On a past day it was checked off, it shows as deleted, read-only.
+    // On a past day it was checked off, it shows as archived, read-only.
     await tester.tap(find.bySemanticsLabel('Fri, Oct 23'));
     await tester.pumpAndSettle();
     expect(find.text('Water'), findsOneWidget);
-    expect(find.text('Deleted · past check-ins still count'), findsOneWidget);
+    expect(find.text('Archived · past check-ins still count'), findsOneWidget);
     expect(find.byTooltip('Edit Water'), findsNothing);
+    await flushSnackBars(tester);
+  });
+
+  testWidgets('Undo restores an archived habit', (tester) async {
+    await pumpToday(tester);
+    await tester.tap(find.byTooltip('Edit Water'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Archive'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Water'), findsOneWidget);
+    expect(
+      readState(
+        tester,
+      ).habits.firstWhere((h) => h.id == 'habit-water').isArchived,
+      isFalse,
+    );
+    await flushSnackBars(tester);
+  });
+
+  testWidgets('a habit never checked off can be deleted for good', (
+    tester,
+  ) async {
+    await pumpToday(tester);
+    await tester.tap(find.text('Add Habit'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'Habit'), 'Stretch');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Add Habit'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Edit Stretch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+    expect(find.text('Delete "Stretch"?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Stretch'), findsNothing);
+    expect(
+      readState(tester).habits.where((h) => h.title == 'Stretch'),
+      isEmpty,
+    );
     await flushSnackBars(tester);
   });
 

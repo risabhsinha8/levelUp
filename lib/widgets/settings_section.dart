@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../models/rpg_models.dart';
 import '../providers/rpg_store_provider.dart';
 import '../screens/codex_guide_screen.dart';
 import '../theme/rpg_theme.dart';
+import 'pillar_roster.dart';
 
 /// Asks for confirmation, then wipes SQLite and returns to onboarding.
 Future<void> confirmWipeAndRestart(BuildContext context, WidgetRef ref) async {
@@ -36,13 +38,68 @@ Future<void> confirmWipeAndRestart(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// Daily keystone reminder: a switch, and the time (tap the tile) when on.
+/// The same switch covers the Mid-Month Campfire and season-end notices.
+class _ReminderTile extends ConsumerWidget {
+  const _ReminderTile();
+
+  static TimeOfDay _time(int minutes) =>
+      TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+
+  Future<void> _turnOn(WidgetRef ref, int minutes) async {
+    await ref.read(rpgStoreProvider.notifier).setReminderTime(minutes);
+    await ref.read(reminderSchedulerProvider).requestPermission();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final minutes = ref.watch(
+      rpgStateProvider.select((s) => s.character.reminderMinutes),
+    );
+    final store = ref.read(rpgStoreProvider.notifier);
+    final on = minutes != null;
+    return ListTile(
+      leading: Icon(
+        on ? LucideIcons.bellRing : LucideIcons.bellOff,
+        color: RpgColors.gold,
+        size: 20,
+      ),
+      title: const Text('Reminders'),
+      subtitle: Text(
+        on
+            ? 'Keystones at ${_time(minutes).format(context)} · '
+                  'campfire & season notices'
+            : 'Off',
+        style: RpgStyles.of(context).stat.copyWith(fontSize: 11),
+      ),
+      trailing: Switch(
+        value: on,
+        onChanged: (value) => value
+            ? _turnOn(ref, Character.defaultReminderMinutes)
+            : store.setReminderTime(null),
+      ),
+      onTap: () async {
+        final picked = await showTimePicker(
+          context: context,
+          initialTime: _time(minutes ?? Character.defaultReminderMinutes),
+          helpText: 'Daily keystone reminder',
+        );
+        if (picked != null) {
+          await _turnOn(ref, picked.hour * 60 + picked.minute);
+        }
+      },
+    );
+  }
+}
+
 /// Character editing, JSON backup export/import, and wipe & restart.
 class SettingsSection extends ConsumerWidget {
   const SettingsSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final character = ref.watch(rpgStateProvider).character;
+    final state = ref.watch(rpgStateProvider);
+    final character = state.character;
     final store = ref.read(rpgStoreProvider.notifier);
 
     return Card(
@@ -69,6 +126,18 @@ class SettingsSection extends ConsumerWidget {
               ),
             ),
           ),
+          const Divider(height: 1),
+          _SettingsTile(
+            icon: LucideIcons.tags,
+            title: 'Rename Pillars',
+            subtitle: state.activeBranches.map(state.nameOf).join(' · '),
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => const RenamePillarsDialog(),
+            ),
+          ),
+          const Divider(height: 1),
+          const _ReminderTile(),
           const Divider(height: 1),
           _SettingsTile(
             icon: LucideIcons.download,

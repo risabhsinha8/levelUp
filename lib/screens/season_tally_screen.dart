@@ -10,9 +10,12 @@ import '../models/rpg_state.dart';
 import '../providers/rpg_store_provider.dart';
 import '../theme/rpg_theme.dart';
 import '../widgets/character_share_card.dart';
+import '../widgets/empty_prompt.dart';
+import '../widgets/pillar_roster.dart';
 import '../widgets/season_complete_dialog.dart';
 import '../widgets/season_ledger.dart';
 import '../widgets/settings_section.dart';
+import 'season_detail_screen.dart';
 
 /// Tab 4: the automated ledger, season rollover, past seasons and settings.
 class SeasonTallyScreen extends ConsumerWidget {
@@ -49,11 +52,16 @@ class SeasonTallyScreen extends ConsumerWidget {
         MathLedgerCard(state: state, sheet: sheet),
         MonthBreakdownCard(state: state, sheet: sheet, today: today),
         _PrestigeCard(state: state, sheet: sheet),
-        if (archived.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          const _Header(title: 'Hall of Seasons'),
-          for (final season in archived) _ArchivedSeasonTile(season: season),
-        ],
+        const SizedBox(height: 20),
+        const _Header(title: 'Hall of Seasons'),
+        if (archived.isEmpty)
+          const EmptyPrompt(
+            icon: LucideIcons.award,
+            title: 'Your first season is underway',
+            message: 'Completed seasons land here, each with its full record.',
+            compact: true,
+          ),
+        for (final season in archived) _ArchivedSeasonTile(season: season),
         const SizedBox(height: 20),
         const _Header(title: 'Settings & Data'),
         const SettingsSection(),
@@ -96,32 +104,16 @@ class _PrestigeCard extends ConsumerWidget {
   final CharacterSheet sheet;
 
   Future<void> _complete(BuildContext context, WidgetRef ref) async {
-    final season = state.currentSeason;
-    final confirmed = await showDialog<bool>(
+    final pillars = await showDialog<Set<BranchType>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Complete ${season.name}?'),
-        content: const Text(
-          'Your nodes and feats will be baked into your base levels and the '
-          'skill tree resets to 0 for the next quarter. Check-ins since the '
-          'season ended count toward the new season.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Not yet'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Level Up'),
-          ),
-        ],
-      ),
+      builder: (context) => _CompleteSeasonDialog(state: state, sheet: sheet),
     );
-    if (confirmed != true || !context.mounted) return;
+    if (pillars == null || !context.mounted) return;
 
     HapticFeedback.heavyImpact();
-    final result = await ref.read(rpgStoreProvider.notifier).completeSeason();
+    final result = await ref
+        .read(rpgStoreProvider.notifier)
+        .completeSeason(activeBranches: pillars);
     if (!context.mounted) return;
     await showDialog<void>(
       context: context,
@@ -134,14 +126,14 @@ class _PrestigeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final styles = RpgStyles.of(context);
-    final startLevel = BranchType.values.fold(
+    final startLevel = sheet.activeBranches.fold(
       0,
       (sum, b) => sum + state.configFor(b).baseLevel,
     );
     final remaining = sheet.seasonLength - sheet.seasonDay;
-    final ready = sheet.branches.values.fold(
+    final ready = sheet.activeBranches.fold(
       0,
-      (sum, b) => sum + b.readyToForge,
+      (sum, b) => sum + sheet.branches[b]!.readyToForge,
     );
     final nextStart = parseDateString(
       toDateString(state.currentSeason.endDate),
@@ -281,13 +273,109 @@ class _ArchivedSeasonTile extends StatelessWidget {
           ' · $activeDays branch days',
           style: styles.stat.copyWith(fontSize: 11),
         ),
-        trailing: summary == null
-            ? null
-            : Text(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (summary != null)
+              Text(
                 'Lv ${summary.startLevel} → ${summary.endLevel}',
                 style: styles.stat.copyWith(color: RpgColors.gold),
               ),
+            const Icon(LucideIcons.chevronRight, size: 18),
+          ],
+        ),
+        onTap: () => openSeasonDetail(context, season.id),
       ),
+    );
+  }
+}
+
+/// Confirms the rollover and picks the pillars for the next season. Pops
+/// the chosen pillars, or null for "Not yet".
+class _CompleteSeasonDialog extends StatefulWidget {
+  const _CompleteSeasonDialog({required this.state, required this.sheet});
+
+  final RpgState state;
+  final CharacterSheet sheet;
+
+  @override
+  State<_CompleteSeasonDialog> createState() => _CompleteSeasonDialogState();
+}
+
+class _CompleteSeasonDialogState extends State<_CompleteSeasonDialog> {
+  late final _pillars = widget.state.activeBranches.toSet();
+
+  /// [branch]'s level once rolled over (ready nodes are forged for free).
+  int _endLevel(BranchType branch) {
+    final stats = widget.sheet.branches[branch]!;
+    return widget.state.configFor(branch).baseLevel +
+        stats.unlockedNodes +
+        stats.completedFeats;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final resting = [
+      for (final b in BranchType.values)
+        if (!_pillars.contains(b) && state.configFor(b).isEnabled) b,
+    ];
+    return AlertDialog(
+      title: Text('Complete ${state.currentSeason.name}?'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your nodes and feats will be baked into your base levels and '
+              'the skill tree resets to 0 for the next quarter. Check-ins '
+              'since the season ended count toward the new season.',
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pillars next season',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            PillarRoster(
+              enabled: _pillars,
+              onToggle: (b) => setState(
+                () =>
+                    _pillars.contains(b) ? _pillars.remove(b) : _pillars.add(b),
+              ),
+              names: {for (final b in BranchType.values) b: state.nameOf(b)},
+              details: {
+                for (final b in BranchType.values)
+                  b: state.configFor(b).isEnabled
+                      ? 'Lv ${_endLevel(b)}'
+                      : 'Resting · Lv ${state.configFor(b).baseLevel}',
+              },
+            ),
+            if (resting.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Resting: ${resting.map(state.nameOf).join(', ')}. Resting '
+                  'pillars keep their level and habits for when they return, '
+                  "but don't count toward your character level.",
+                  style: RpgStyles.of(
+                    context,
+                  ).stat.copyWith(fontSize: 11, color: RpgColors.ember),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Not yet'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, {..._pillars}),
+          child: const Text('Level Up'),
+        ),
+      ],
     );
   }
 }

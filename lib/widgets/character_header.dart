@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../models/rpg_models.dart';
 import '../providers/rpg_store_provider.dart';
+import '../screens/character_screen.dart';
 import '../screens/codex_guide_screen.dart';
 import '../theme/rpg_theme.dart';
 import 'character_share_card.dart';
 import 'level_badge.dart';
+import 'pixel_avatar.dart';
 import 'settings_section.dart';
 
-/// Persistent top bar: name, class title, season day counter and level.
+/// Persistent top bar: avatar with level, name, class title and season day
+/// counter. Tapping the avatar opens the Character page.
 class CharacterHeader extends ConsumerWidget implements PreferredSizeWidget {
   const CharacterHeader({super.key});
 
@@ -39,8 +43,14 @@ class CharacterHeader extends ConsumerWidget implements PreferredSizeWidget {
           ),
           child: Row(
             children: [
-              LevelBadge(level: sheetValue?.totalLevel ?? 0),
-              const SizedBox(width: 16),
+              _AvatarButton(
+                avatar: character?.avatarOrDefault,
+                level: sheetValue?.totalLevel ?? 0,
+                onTap: character == null
+                    ? null
+                    : () => openCharacterPage(context),
+              ),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -107,6 +117,53 @@ class CharacterHeader extends ConsumerWidget implements PreferredSizeWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AvatarButton extends StatelessWidget {
+  const _AvatarButton({
+    required this.avatar,
+    required this.level,
+    required this.onTap,
+  });
+
+  final AvatarSpec? avatar;
+  final int level;
+  final VoidCallback? onTap;
+
+  static const double _size = 60;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Tooltip(
+          message: 'Character page',
+          child: Semantics(
+            button: true,
+            label: 'Character page',
+            excludeSemantics: true,
+            child: GestureDetector(
+              key: const ValueKey('header-avatar'),
+              onTap: onTap,
+              child: avatar != null
+                  ? PixelAvatar(spec: avatar!, size: _size)
+                  : const SizedBox.square(dimension: _size),
+            ),
+          ),
+        ),
+        // A sibling, not a child, so "Level N" stays its own label.
+        Positioned(
+          right: -10,
+          bottom: -8,
+          child: GestureDetector(
+            onTap: onTap,
+            child: LevelBadge(level: level, size: 30),
+          ),
+        ),
+      ],
     );
   }
 }

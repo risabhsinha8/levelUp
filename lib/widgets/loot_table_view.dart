@@ -13,48 +13,65 @@ import '../theme/rpg_theme.dart';
 import 'celebration_overlay.dart';
 import 'empty_prompt.dart';
 
+/// Tiers with a key to spend and at least one reward to spend it on.
+Set<LootTier> choosableLootTiers(WidgetRef ref) {
+  final state = ref.read(rpgStateProvider);
+  final keys = ref.read(characterSheetProvider).requireValue.lootKeys;
+  return {
+    for (final tier in LootTier.values)
+      if (keys[tier]!.available > 0 &&
+          state.loot.any((l) => l.tier == tier && !l.isClaimed))
+        tier,
+  };
+}
+
+/// Lets the user choose one of [tier]'s rewards, spends a key on it and
+/// celebrates. Does nothing if the sheet is dismissed.
+Future<void> chooseLootReward(
+  BuildContext context,
+  WidgetRef ref,
+  LootTier tier,
+) async {
+  final rewards = [
+    for (final l in ref.read(rpgStateProvider).loot)
+      if (l.tier == tier && !l.isClaimed) l,
+  ];
+  final item = await showModalBottomSheet<LootItem>(
+    context: context,
+    backgroundColor: RpgColors.slateRaised,
+    showDragHandle: true,
+    builder: (_) => _PickRewardSheet(tier: tier, rewards: rewards),
+  );
+  if (item != null && context.mounted) await _claimLoot(context, ref, item);
+}
+
+Future<void> _claimLoot(
+  BuildContext context,
+  WidgetRef ref,
+  LootItem item,
+) async {
+  HapticFeedback.heavyImpact();
+  final ok = await ref.read(rpgStoreProvider.notifier).claimLoot(item.id);
+  if (!context.mounted) return;
+  if (ok) {
+    await showLootCelebration(context, item);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('No ${item.tier.label} Key available.')),
+    );
+  }
+}
+
 /// Loot Table: treasure chests for unspent keys, the key wallet, rewards
 /// grouped by tier, and claim history.
 class LootTableView extends ConsumerWidget {
   const LootTableView({super.key});
-
-  Future<void> _claim(
-    BuildContext context,
-    WidgetRef ref,
-    LootItem item,
-  ) async {
-    HapticFeedback.heavyImpact();
-    final ok = await ref.read(rpgStoreProvider.notifier).claimLoot(item.id);
-    if (!context.mounted) return;
-    if (ok) {
-      await showLootCelebration(context, item);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No ${item.tier.label} Key available.')),
-      );
-    }
-  }
 
   Future<void> _roll(BuildContext context, WidgetRef ref, LootTier tier) async {
     final reward = await ref.read(rpgStoreProvider.notifier).rollLoot(tier);
     if (reward != null && context.mounted) {
       await showLootCelebration(context, reward);
     }
-  }
-
-  Future<void> _pick(
-    BuildContext context,
-    WidgetRef ref,
-    LootTier tier,
-    List<LootItem> rewards,
-  ) async {
-    final item = await showModalBottomSheet<LootItem>(
-      context: context,
-      backgroundColor: RpgColors.slateRaised,
-      showDragHandle: true,
-      builder: (_) => _PickRewardSheet(tier: tier, rewards: rewards),
-    );
-    if (item != null && context.mounted) await _claim(context, ref, item);
   }
 
   Future<void> _addReward(
@@ -93,7 +110,7 @@ class LootTableView extends ConsumerWidget {
               keys: keys[tier]!.available,
               rewardCount: rewardsOf(tier).length,
               onRoll: () => _roll(context, ref, tier),
-              onPick: () => _pick(context, ref, tier, rewardsOf(tier)),
+              onPick: () => chooseLootReward(context, ref, tier),
             ),
         _KeyWallet(keys: keys),
         const SizedBox(height: 20),
@@ -102,7 +119,7 @@ class LootTableView extends ConsumerWidget {
             tier: tier,
             balance: keys[tier]!,
             rewards: rewardsOf(tier),
-            onClaim: (item) => _claim(context, ref, item),
+            onClaim: (item) => _claimLoot(context, ref, item),
             onAdd: () => _addReward(context, ref, tier),
           ),
         const SizedBox(height: 8),

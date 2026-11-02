@@ -14,6 +14,17 @@ class RootGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Keeps the device's pending notifications in step with the save
+    // (and clears them after a wipe).
+    ref.listen(reminderPlanProvider, (previous, plan) {
+      if (plan == previous) return;
+      ref
+          .read(reminderSchedulerProvider)
+          .replaceAll(plan)
+          .catchError(
+            (Object e) => debugPrint('Could not schedule reminders: $e'),
+          );
+    });
     final store = ref.watch(rpgStoreProvider);
     // Swaps instantly (no cross-fade): screens under HomeShell assume a
     // character exists, so HomeShell must unmount as soon as it's gone.

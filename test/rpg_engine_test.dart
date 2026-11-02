@@ -562,10 +562,16 @@ void main() {
         'craft',
         'bond',
         'empire',
+        'spirit',
+        'wander',
       ]);
+      expect(BranchType.defaults, BranchType.values.take(5));
       expect(BranchType.mind.displayName, 'Mind');
       expect(BranchType.mind.hexColor, matches(RegExp(r'^#[0-9A-F]{6}$')));
-      expect(BranchType.values.map((b) => b.colorValue).toSet().length, 5);
+      expect(
+        BranchType.values.map((b) => b.colorValue).toSet(),
+        hasLength(BranchType.values.length),
+      );
     });
   });
 }

@@ -155,7 +155,7 @@ class _HalfMatrixCard extends ConsumerWidget {
     // Habits scheduled for this half, plus any with completions in it so no
     // logged history is ever hidden (e.g. after a pivot).
     final rows = [
-      for (final branch in BranchType.values)
+      for (final branch in state.activeBranches)
         for (final h in state.habits)
           if (h.branch == branch &&
               ((!h.isArchived && h.activeHalfMonth.includes(days.first)) ||
@@ -267,8 +267,12 @@ class _HalfMatrixCard extends ConsumerWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final branch in BranchType.values)
-                  _BranchTally(branch: branch, days: branchDays[branch]!),
+                for (final branch in state.activeBranches)
+                  _BranchTally(
+                    branch: branch,
+                    name: state.nameOf(branch),
+                    days: branchDays[branch]!,
+                  ),
               ],
             ),
           ],
@@ -420,9 +424,14 @@ class _MatrixCell extends StatelessWidget {
 }
 
 class _BranchTally extends StatelessWidget {
-  const _BranchTally({required this.branch, required this.days});
+  const _BranchTally({
+    required this.branch,
+    required this.name,
+    required this.days,
+  });
 
   final BranchType branch;
+  final String name;
   final int days;
 
   @override
@@ -434,7 +443,7 @@ class _BranchTally extends StatelessWidget {
         border: Border.all(color: branch.color.withValues(alpha: 0.6)),
       ),
       child: Text(
-        '${branch.displayName} $days',
+        '$name $days',
         style: RpgStyles.of(
           context,
         ).stat.copyWith(fontSize: 10, color: branch.color),

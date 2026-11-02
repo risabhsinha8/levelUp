@@ -84,28 +84,29 @@ class SeasonCompleteDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             for (final branch in BranchType.values)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: branch.color,
-                        shape: BoxShape.circle,
+              if (summary.branches.containsKey(branch))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: branch.color,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(branch.displayName)),
-                    Text(
-                      'Lv ${summary.branches[branch]!.startLevel} → '
-                      '${summary.branches[branch]!.endLevel}',
-                      style: styles.stat.copyWith(color: branch.color),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(result.state.nameOf(branch))),
+                      Text(
+                        'Lv ${summary.branches[branch]!.startLevel} → '
+                        '${summary.branches[branch]!.endLevel}',
+                        style: styles.stat.copyWith(color: branch.color),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             const SizedBox(height: 16),
             Text(
               '${result.newSeason.name} is underway. Your levels are now '

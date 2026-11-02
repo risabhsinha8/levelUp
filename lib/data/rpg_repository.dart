@@ -31,6 +31,9 @@ abstract interface class RpgRepository {
 
   Future<void> updateBranchBuffDebuff(BranchConfig config);
 
+  /// Saves [config]'s custom name (`display_name`).
+  Future<void> renameBranch(BranchConfig config);
+
   /// Saves [config]'s `forged_node_count` after a node is forged.
   Future<void> updateForgedNodes(BranchConfig config);
 
@@ -61,7 +64,8 @@ abstract interface class RpgRepository {
   Future<void> updateCharacter(Character character);
 
   /// Writes a season rollover: archives [completed], adds [next]'s new
-  /// current season, rebased branch levels and stamped quests.
+  /// current season, rebased branch levels, enabled pillars and stamped
+  /// quests.
   Future<void> prestigeSeason({
     required Season completed,
     required RpgState next,

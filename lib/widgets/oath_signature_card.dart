@@ -145,13 +145,19 @@ class _OathSignatureCardState extends ConsumerState<OathSignatureCard> {
   String _oathText(RpgState state) {
     final season = state.currentSeason;
     final dates = DateFormat.MMMd();
-    final branches = BranchType.values.map((b) => b.displayName).toList();
+    final pillars = joinPillarNames(state.activeBranches.map(state.nameOf));
     return 'I, ${state.character.name}, swear to show up for my '
-        '${branches.sublist(0, branches.length - 1).join(', ')} and '
-        '${branches.last} through ${season.name} '
+        '$pillars through ${season.name} '
         '(${dates.format(season.startDate)} – ${dates.format(season.endDate)}). '
         'One point a day. No streak shame. Progress over perfection.';
   }
+}
+
+/// "Mind, Body and Craft": pillar [names] for the oath.
+String joinPillarNames(Iterable<String> names) {
+  final list = names.toList();
+  if (list.length < 2) return list.join();
+  return '${list.sublist(0, list.length - 1).join(', ')} and ${list.last}';
 }
 
 class _SealStamp extends StatelessWidget {

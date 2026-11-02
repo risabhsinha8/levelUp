@@ -39,7 +39,7 @@ class QuestFormSheet extends ConsumerStatefulWidget {
 class _QuestFormSheetState extends ConsumerState<QuestFormSheet> {
   late bool _isMain = widget.isMainQuest;
   late int _month = widget.monthIndex;
-  BranchType _branch = BranchType.mind;
+  late BranchType _branch = ref.read(rpgStateProvider).activeBranches.first;
   int _difficulty = 2;
   final _title = TextEditingController();
   final _reward = TextEditingController();
@@ -126,9 +126,9 @@ class _QuestFormSheetState extends ConsumerState<QuestFormSheet> {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final branch in BranchType.values)
+                for (final branch in state.activeBranches)
                   ChoiceChip(
-                    label: Text(branch.displayName),
+                    label: Text(state.nameOf(branch)),
                     selected: _branch == branch,
                     showCheckmark: false,
                     selectedColor: branch.color.withValues(alpha: 0.25),

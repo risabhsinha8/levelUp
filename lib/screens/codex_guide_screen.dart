@@ -550,7 +550,7 @@ class _FormulaCard extends StatelessWidget {
           const SizedBox(height: 10),
           const _Equation(
             result: 'Character Level',
-            terms: ['Sum of all 5 Branch Levels'],
+            terms: ['Sum of your active Branch Levels'],
           ),
           if (state != null && sheet != null) ...[
             const Divider(height: 28),
@@ -563,7 +563,7 @@ class _FormulaCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            for (final branch in BranchType.values)
+            for (final branch in sheet.activeBranches)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3),
                 child: Row(
@@ -571,7 +571,9 @@ class _FormulaCard extends StatelessWidget {
                     SizedBox(
                       width: 64,
                       child: Text(
-                        branch.displayName,
+                        state.nameOf(branch),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: styles.stat.copyWith(color: branch.color),
                       ),
                     ),
@@ -601,7 +603,7 @@ class _FormulaCard extends StatelessWidget {
                 border: Border.all(color: RpgColors.goldDim),
               ),
               child: Text(
-                '${[for (final b in BranchType.values) sheet.branches[b]!.level].join(' + ')}'
+                '${[for (final b in sheet.activeBranches) sheet.branches[b]!.level].join(' + ')}'
                 ' = Character Level ${sheet.totalLevel}',
                 textAlign: TextAlign.center,
                 style: styles.stat.copyWith(
@@ -680,7 +682,9 @@ class _LootCard extends StatelessWidget {
     LootTier.common: 'Every 7-day unbroken streak on a ★ Keystone Habit.',
     LootTier.rare: 'Unlocking any Skill Tree node.',
     LootTier.epic: 'Hitting 80 Active Days in a single branch.',
-    LootTier.legendary: 'Completing all 25 nodes across the entire Skill Tree.',
+    LootTier.legendary:
+        'Completing every node across the entire Skill Tree (25 with five '
+        'pillars).',
   };
 
   @override

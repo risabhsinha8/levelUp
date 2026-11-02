@@ -5,10 +5,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../models/rpg_models.dart';
 import '../providers/rpg_store_provider.dart';
+import '../screens/habit_history_screen.dart';
 import '../theme/rpg_theme.dart';
 
 /// Opens the habit editor: pass [habit] to edit it, or [branch] to add a new
-/// habit to that branch.
+/// habit to that branch (by default the first active pillar).
 Future<void> showHabitEditor(
   BuildContext context, {
   Habit? habit,
@@ -19,18 +20,16 @@ Future<void> showHabitEditor(
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: RpgColors.slateRaised,
-    builder: (_) => HabitEditorSheet(
-      habit: habit,
-      initialBranch: branch ?? habit?.branch ?? BranchType.mind,
-    ),
+    builder: (_) =>
+        HabitEditorSheet(habit: habit, initialBranch: branch ?? habit?.branch),
   );
 }
 
 class HabitEditorSheet extends ConsumerStatefulWidget {
-  const HabitEditorSheet({super.key, this.habit, required this.initialBranch});
+  const HabitEditorSheet({super.key, this.habit, this.initialBranch});
 
   final Habit? habit;
-  final BranchType initialBranch;
+  final BranchType? initialBranch;
 
   @override
   ConsumerState<HabitEditorSheet> createState() => _HabitEditorSheetState();
@@ -41,7 +40,8 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
   late final _target = TextEditingController(
     text: widget.habit?.targetCriteria,
   );
-  late BranchType _branch = widget.initialBranch;
+  late BranchType _branch =
+      widget.initialBranch ?? ref.read(rpgStateProvider).activeBranches.first;
   late bool _isKeystone = widget.habit?.isKeystone ?? false;
   late ActiveHalfMonth _schedule =
       widget.habit?.activeHalfMonth ?? ActiveHalfMonth.both;
@@ -70,6 +70,12 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
     navigator.pop();
   }
 
+  Future<void> _archive() async {
+    final navigator = Navigator.of(context);
+    await archiveHabitWithUndo(context, ref, widget.habit!);
+    navigator.pop();
+  }
+
   Future<void> _delete() async {
     final habit = widget.habit!;
     final navigator = Navigator.of(context);
@@ -79,8 +85,8 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
       builder: (context) => AlertDialog(
         title: Text('Delete "${habit.title}"?'),
         content: const Text(
-          'It disappears from your daily list. Days you already checked it '
-          'off still count toward your branch points.',
+          'It has never been checked off, so it is removed for good. '
+          'Archive it instead to keep it in your history.',
         ),
         actions: [
           TextButton(
@@ -161,9 +167,9 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
               spacing: 6,
               runSpacing: 6,
               children: [
-                for (final branch in BranchType.values)
+                for (final branch in state.activeBranches)
                   ChoiceChip(
-                    label: Text(branch.displayName),
+                    label: Text(state.nameOf(branch)),
                     selected: _branch == branch,
                     showCheckmark: false,
                     selectedColor: branch.color.withValues(alpha: 0.25),
@@ -185,7 +191,7 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
               const SizedBox(height: 6),
               Text(
                 'Branch locked: past check-ins count toward '
-                '${_branch.displayName}.',
+                '${state.nameOf(_branch)}.',
                 style: styles.stat.copyWith(fontSize: 10),
               ),
             ],
@@ -228,23 +234,41 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
               subtitle: Text(
                 replacesKeystone
                     ? 'Replaces ★ ${currentKeystone.title} as the '
-                          '${_branch.displayName} keystone'
+                          '${state.nameOf(_branch)} keystone'
                     : 'The daily non-negotiable for this branch',
                 style: styles.stat.copyWith(fontSize: 11),
               ),
             ),
             const SizedBox(height: 16),
+            if (!_isNew)
+              Wrap(
+                spacing: 4,
+                children: [
+                  TextButton.icon(
+                    onPressed: () => openHabitDetail(context, widget.habit!.id),
+                    icon: const Icon(LucideIcons.history, size: 16),
+                    label: const Text('History'),
+                  ),
+                  TextButton.icon(
+                    onPressed: _archive,
+                    icon: const Icon(LucideIcons.archive, size: 16),
+                    label: const Text('Archive'),
+                    style: TextButton.styleFrom(foregroundColor: RpgColors.ink),
+                  ),
+                  // With check-ins, deleting would only archive it.
+                  if (!branchLocked)
+                    TextButton.icon(
+                      onPressed: _delete,
+                      icon: const Icon(LucideIcons.trash2, size: 16),
+                      label: const Text('Delete'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: RpgColors.danger,
+                      ),
+                    ),
+                ],
+              ),
             Row(
               children: [
-                if (!_isNew)
-                  TextButton.icon(
-                    onPressed: _delete,
-                    icon: const Icon(LucideIcons.trash2, size: 16),
-                    label: const Text('Delete'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: RpgColors.danger,
-                    ),
-                  ),
                 const Spacer(),
                 FilledButton(
                   onPressed: _title.text.trim().isEmpty ? null : _save,

@@ -21,8 +21,11 @@ class DatabaseHelper {
 
   /// 1: Phase 7 schema. 2: `habits.keystone_periods`. 3: the current season
   /// is aligned to calendar quarters (no column changes).
-  /// 4: `branch_configs.forged_node_count`.
-  static const int schemaVersion = 4;
+  /// 4: `branch_configs.forged_node_count`. 5: `branch_configs.display_name`
+  /// and `is_enabled` (custom pillars; spare slots have no row until used).
+  /// 6: `characters.avatar_data`. 7: `characters.reminder_minutes`
+  /// (existing characters get the 8 pm default).
+  static const int schemaVersion = 7;
 
   /// All tables, in the order they are cleared.
   static const tables = [
@@ -67,6 +70,27 @@ class DatabaseHelper {
               'forged_node_count INTEGER NOT NULL DEFAULT 0',
             );
             await forgeEarnedNodes(db);
+          }
+          if (oldVersion < 5) {
+            await db.execute(
+              'ALTER TABLE branch_configs ADD COLUMN '
+              "display_name TEXT NOT NULL DEFAULT ''",
+            );
+            await db.execute(
+              'ALTER TABLE branch_configs ADD COLUMN '
+              'is_enabled INTEGER NOT NULL DEFAULT 1',
+            );
+          }
+          if (oldVersion < 6) {
+            await db.execute(
+              'ALTER TABLE characters ADD COLUMN avatar_data TEXT',
+            );
+          }
+          if (oldVersion < 7) {
+            await db.execute(
+              'ALTER TABLE characters ADD COLUMN reminder_minutes INTEGER '
+              'DEFAULT ${Character.defaultReminderMinutes}',
+            );
           }
         },
       ),
@@ -160,13 +184,17 @@ class DatabaseHelper {
   static const _schema = [
     // signature_data: the current season's drawn oath as JSON
     // ({"seasonId", "strokes", "signedAtDate"}), or null if unsigned.
+    // avatar_data: AvatarSpec JSON, or null if never picked.
+    // reminder_minutes: daily reminder time after midnight; null = off.
     '''CREATE TABLE characters (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       class_title TEXT NOT NULL,
       signature_data TEXT,
       current_season_id TEXT NOT NULL,
-      signature_text TEXT NOT NULL DEFAULT '' -- extension
+      signature_text TEXT NOT NULL DEFAULT '', -- extension
+      avatar_data TEXT, -- extension
+      reminder_minutes INTEGER -- extension
     )''',
     // mid_month_notes: JSON map of month key ("2026-10") to
     // {"notes", "pivots"} for the months reflected on during this season.
@@ -181,12 +209,15 @@ class DatabaseHelper {
       summary_data TEXT -- extension: SeasonSummary JSON once completed
     )''',
     // buff_text / debuff_text: JSON arrays of chip strings.
+    // display_name: custom pillar name ('' = the default name).
     '''CREATE TABLE branch_configs (
       branch TEXT PRIMARY KEY,
       base_level INTEGER NOT NULL DEFAULT 0,
       buff_text TEXT NOT NULL DEFAULT '[]',
       debuff_text TEXT NOT NULL DEFAULT '[]',
-      forged_node_count INTEGER NOT NULL DEFAULT 0
+      forged_node_count INTEGER NOT NULL DEFAULT 0,
+      display_name TEXT NOT NULL DEFAULT '', -- extension
+      is_enabled INTEGER NOT NULL DEFAULT 1 -- extension
     )''',
     '''CREATE TABLE habits (
       id TEXT PRIMARY KEY,

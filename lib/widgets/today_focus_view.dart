@@ -10,7 +10,9 @@ import '../models/rpg_state.dart';
 import '../providers/rpg_store_provider.dart';
 import '../theme/rpg_theme.dart';
 import 'campfire_sheet.dart';
+import 'celebration_overlay.dart';
 import 'habit_editor_sheet.dart';
+import 'loot_table_view.dart';
 import 'empty_prompt.dart';
 
 /// "Today's Focus": Survival Mode switch, week strip, keystone banner and
@@ -44,9 +46,23 @@ class _TodayFocusViewState extends ConsumerState<TodayFocusView> {
     } else {
       HapticFeedback.selectionClick();
     }
+    int commonKeys() => ref
+        .read(characterSheetProvider)
+        .requireValue
+        .lootKeys[LootTier.common]!
+        .earned;
+    final keysBefore = commonKeys();
     await ref
         .read(rpgStoreProvider.notifier)
         .toggleHabitForDate(habit.id, _selected);
+    // A keystone check-in that completes a 7-day run earns a Common Key:
+    // celebrate it and offer to spend it right away.
+    if (!mounted || commonKeys() <= keysBefore) return;
+    final tier = await showCommonKeyCelebration(
+      context,
+      choosable: choosableLootTiers(ref).contains(LootTier.common),
+    );
+    if (tier != null && mounted) await chooseLootReward(context, ref, tier);
   }
 
   Future<void> _toggleKeystone(RpgState state, Habit habit) async {
@@ -57,7 +73,7 @@ class _TodayFocusViewState extends ConsumerState<TodayFocusView> {
     await ref
         .read(rpgStoreProvider.notifier)
         .setKeystone(habit.id, isKeystone: makeKeystone);
-    final branch = habit.branch.displayName;
+    final branch = state.nameOf(habit.branch);
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -111,17 +127,19 @@ class _TodayFocusViewState extends ConsumerState<TodayFocusView> {
           ],
           completed: completed,
           isToday: DateUtils.isSameDay(_selected, _today),
+          nameOf: state.nameOf,
         ),
         const SizedBox(height: 12),
         if (habits.isEmpty)
           const _EmptyHabits()
         else ...[
-          for (final branch in BranchType.values)
+          for (final branch in state.activeBranches)
             if (habits.any((h) => h.branch == branch))
               _Collapsible(
                 visible: habits.any((h) => h.branch == branch && shown(h)),
                 child: _BranchCard(
                   branch: branch,
+                  name: state.nameOf(branch),
                   habits: [
                     for (final h in habits)
                       if (h.branch == branch) h,
@@ -319,7 +337,7 @@ class _WeekStrip extends StatelessWidget {
   List<BranchType> _activeBranches(DateTime day) {
     final done = state.completedOn(day);
     return [
-      for (final branch in BranchType.values)
+      for (final branch in state.activeBranches)
         if (state.habitsFor(branch).any((h) => done.contains(h.id))) branch,
     ];
   }
@@ -390,22 +408,29 @@ class _DayChip extends StatelessWidget {
                   const SizedBox(height: 3),
                   SizedBox(
                     height: 4,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        for (final branch in activeBranches)
-                          Container(
-                            width: 4,
-                            height: 4,
-                            margin: const EdgeInsets.symmetric(horizontal: 0.5),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? RpgColors.obsidian
-                                  : branch.color,
-                              shape: BoxShape.circle,
+                    // Shrinks the dots when 6–7 pillars outgrow a narrow day.
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (final branch in activeBranches)
+                            Container(
+                              width: 4,
+                              height: 4,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 0.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? RpgColors.obsidian
+                                    : branch.color,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -423,11 +448,13 @@ class _KeystoneBanner extends StatelessWidget {
     required this.keystones,
     required this.completed,
     required this.isToday,
+    required this.nameOf,
   });
 
   final List<Habit> keystones;
   final Set<String> completed;
   final bool isToday;
+  final String Function(BranchType) nameOf;
 
   @override
   Widget build(BuildContext context) {
@@ -481,7 +508,7 @@ class _KeystoneBanner extends StatelessWidget {
                   children: [
                     for (final h in keystones)
                       Tooltip(
-                        message: '${h.branch.displayName}: ${h.title}',
+                        message: '${nameOf(h.branch)}: ${h.title}',
                         child: Icon(
                           Icons.star_rounded,
                           size: 20,
@@ -512,6 +539,7 @@ class _KeystoneBanner extends StatelessWidget {
 class _BranchCard extends StatelessWidget {
   const _BranchCard({
     required this.branch,
+    required this.name,
     required this.habits,
     required this.isShown,
     required this.completed,
@@ -520,6 +548,7 @@ class _BranchCard extends StatelessWidget {
   });
 
   final BranchType branch;
+  final String name;
   final List<Habit> habits;
 
   /// Habits hidden by Survival Mode fold away but still count when done.
@@ -548,7 +577,7 @@ class _BranchCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    branch.displayName,
+                    name,
                     style: Theme.of(
                       context,
                     ).textTheme.titleMedium?.copyWith(color: branch.color),
@@ -556,7 +585,7 @@ class _BranchCard extends StatelessWidget {
                 ),
                 _BranchPointPill(color: branch.color, secured: secured),
                 IconButton(
-                  tooltip: 'Add ${branch.displayName} habit',
+                  tooltip: 'Add $name habit',
                   visualDensity: VisualDensity.compact,
                   icon: Icon(LucideIcons.plus, size: 18, color: branch.color),
                   onPressed: () => showHabitEditor(context, branch: branch),
@@ -680,7 +709,7 @@ class _HabitTile extends StatelessWidget {
                     if (habit.targetCriteria.isNotEmpty || habit.isArchived)
                       Text(
                         habit.isArchived
-                            ? 'Deleted · past check-ins still count'
+                            ? 'Archived · past check-ins still count'
                             : habit.targetCriteria,
                         style: RpgStyles.of(context).stat,
                       ),

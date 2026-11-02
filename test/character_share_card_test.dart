@@ -35,6 +35,7 @@ Future<List<Uint8List>> pumpWithSharer(
         rpgRepositoryProvider.overrideWithValue(
           InMemoryRepository(state ?? buildDemoState(today)),
         ),
+        reminderSchedulerProvider.overrideWithValue(FakeReminderScheduler()),
         characterCardSharerProvider.overrideWithValue((png, {origin}) async {
           if (failing) throw StateError('share sheet unavailable');
           shared.add(png);
@@ -155,7 +156,7 @@ void main() {
 
   test('the radar scale rounds up to a multiple of 5', () {
     AttributeRadarPainter radar(List<int> levels) => AttributeRadarPainter(
-      levels: {for (final (i, b) in BranchType.values.indexed) b: levels[i]},
+      levels: {for (final (i, b) in BranchType.defaults.indexed) b: levels[i]},
       labelStyle: const TextStyle(),
     );
     expect(radar([0, 0, 0, 0, 0]).scaleMax, 5);

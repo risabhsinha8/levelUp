@@ -6,6 +6,7 @@ import 'rpg_engine.dart';
 class BranchStats {
   const BranchStats({
     required this.branch,
+    required this.name,
     required this.activeDays,
     required this.unlockedNodes,
     required this.forgedNodes,
@@ -14,6 +15,9 @@ class BranchStats {
   });
 
   final BranchType branch;
+
+  /// The character's name for the pillar ([RpgState.nameOf]).
+  final String name;
   final int activeDays;
 
   /// Nodes earned by [activeDays] (0–5).
@@ -37,6 +41,7 @@ class BranchStats {
 /// Everything the UI shows that is computed rather than stored.
 class CharacterSheet {
   const CharacterSheet({
+    required this.activeBranches,
     required this.branches,
     required this.totalLevel,
     required this.lootKeys,
@@ -48,6 +53,7 @@ class CharacterSheet {
   /// Builds the sheet for the current season of [state] as of [today].
   factory CharacterSheet.fromState(RpgState state, DateTime today) {
     final season = state.currentSeason;
+    final activeBranches = state.activeBranches;
     final activeDays = RpgEngine.calculateAllBranchActiveDays(
       state.habits,
       state.logs,
@@ -70,6 +76,7 @@ class CharacterSheet {
           );
           return BranchStats(
             branch: branch,
+            name: config.name,
             activeDays: days,
             unlockedNodes: nodes,
             forgedNodes: forged,
@@ -84,9 +91,10 @@ class CharacterSheet {
     };
 
     return CharacterSheet(
+      activeBranches: activeBranches,
       branches: branches,
       totalLevel: RpgEngine.calculateTotalCharacterLevel({
-        for (final entry in branches.entries) entry.key: entry.value.level,
+        for (final branch in activeBranches) branch: branches[branch]!.level,
       }),
       lootKeys: RpgEngine.calculateAvailableLootKeys(
         habits: state.habits,
@@ -97,6 +105,7 @@ class CharacterSheet {
             branch: state.configFor(branch).forgedNodeCount,
         },
         season: season,
+        branches: activeBranches,
       ),
       seasonDay: RpgEngine.calculateSeasonDay(season, today),
       seasonLength: RpgEngine.calculateSeasonLength(season),
@@ -104,7 +113,14 @@ class CharacterSheet {
     );
   }
 
+  /// The pillars in play, in branch order ([RpgState.activeBranches]).
+  final List<BranchType> activeBranches;
+
+  /// Stats for every branch, resting ones included (their level is their
+  /// banked base level).
   final Map<BranchType, BranchStats> branches;
+
+  /// Sum of the active pillars' levels.
   final int totalLevel;
   final Map<LootTier, LootKeyBalance> lootKeys;
   final int seasonDay;

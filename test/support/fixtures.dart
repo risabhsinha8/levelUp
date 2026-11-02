@@ -7,13 +7,31 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:level_up/data/reminder_scheduler.dart';
 import 'package:level_up/data/rpg_repository.dart';
+import 'package:level_up/domain/reminder_plan.dart';
 import 'package:level_up/domain/new_character.dart';
 import 'package:level_up/main.dart';
 import 'package:level_up/models/rpg_models.dart';
 import 'package:level_up/models/rpg_state.dart';
 import 'package:level_up/providers/rpg_store_provider.dart';
 import 'package:level_up/screens/home_shell.dart';
+
+/// Records what the app would schedule instead of calling the OS.
+class FakeReminderScheduler implements ReminderScheduler {
+  /// The last plan handed over (what the device would have pending).
+  ReminderPlan scheduled = ReminderPlan.empty;
+  int permissionRequests = 0;
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests++;
+    return true;
+  }
+
+  @override
+  Future<void> replaceAll(ReminderPlan plan) async => scheduled = plan;
+}
 
 /// Repository fake that keeps the state in memory, applying each granular
 /// write the way the SQLite repository does. [saveCount] counts writes.
@@ -127,6 +145,10 @@ class InMemoryRepository implements RpgRepository {
   );
 
   @override
+  Future<void> renameBranch(BranchConfig config) =>
+      updateBranchBuffDebuff(config);
+
+  @override
   Future<void> updateForgedNodes(BranchConfig config) =>
       updateBranchBuffDebuff(config);
 
@@ -225,6 +247,7 @@ Future<InMemoryRepository> pumpLevelUp(
   Size size = const Size(800, 2600),
   bool settle = true,
   math.Random? random,
+  FakeReminderScheduler? reminders,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -236,6 +259,9 @@ Future<InMemoryRepository> pumpLevelUp(
         clockProvider.overrideWithValue(() => now),
         rpgRepositoryProvider.overrideWithValue(repo),
         if (random != null) randomProvider.overrideWithValue(random),
+        reminderSchedulerProvider.overrideWithValue(
+          reminders ?? FakeReminderScheduler(),
+        ),
       ],
       child: const LevelUpApp(useGoogleFonts: false),
     ),

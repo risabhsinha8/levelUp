@@ -1,0 +1,2062 @@
+{
+  "schemaVersion": 1,
+  "character": {
+    "name": "Aria Vance",
+    "classTitle": "Wandering Scholar",
+    "signatureText": "I will show up, even on the hard days.",
+    "currentSeasonId": "season-2026-q4",
+    "avatar": {
+      "skinTone": 2,
+      "hair": "long",
+      "hairColor": 1,
+      "face": "calm",
+      "outfit": "cloak",
+      "outfitColor": 1,
+      "headgear": "hood",
+      "background": 2
+    }
+  },
+  "branchConfigs": [
+    {
+      "branch": "mind",
+      "baseLevel": 6,
+      "buffs": [
+        "Book on pillow"
+      ],
+      "debuffs": [
+        "Doomscrolling in bed"
+      ],
+      "forgedNodeCount": 1,
+      "isEnabled": true
+    },
+    {
+      "branch": "body",
+      "baseLevel": 6,
+      "buffs": [
+        "Gym clothes laid out",
+        "Water bottle at desk"
+      ],
+      "debuffs": [
+        "Late dinners"
+      ],
+      "forgedNodeCount": 1,
+      "isEnabled": true
+    },
+    {
+      "branch": "craft",
+      "baseLevel": 5,
+      "buffs": [
+        "Laptop open on desk"
+      ],
+      "debuffs": [
+        "Perfectionism"
+      ],
+      "forgedNodeCount": 2,
+      "isEnabled": true
+    },
+    {
+      "branch": "bond",
+      "baseLevel": 5,
+      "buffs": [
+        "Weekly call reminder"
+      ],
+      "debuffs": [
+        "Saying 'later'"
+      ],
+      "forgedNodeCount": 2,
+      "isEnabled": true
+    },
+    {
+      "branch": "empire",
+      "baseLevel": 4,
+      "buffs": [
+        "Budget app on home screen"
+      ],
+      "debuffs": [
+        "Impulse buys"
+      ],
+      "forgedNodeCount": 2,
+      "isEnabled": true,
+      "customName": "Wealth"
+    }
+  ],
+  "habits": [
+    {
+      "id": "h-mind-read",
+      "branch": "mind",
+      "title": "Read 20 pages",
+      "targetCriteria": "Any book, no phones",
+      "isKeystone": true,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-mind-journal",
+      "branch": "mind",
+      "title": "Evening journal",
+      "targetCriteria": "3 lines minimum",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-mind-meditate",
+      "branch": "mind",
+      "title": "Meditate",
+      "targetCriteria": "10 minutes",
+      "isKeystone": false,
+      "activeHalfMonth": "firstHalf"
+    },
+    {
+      "id": "h-mind-chess",
+      "branch": "mind",
+      "title": "Chess puzzle",
+      "targetCriteria": "1 puzzle",
+      "isKeystone": false,
+      "activeHalfMonth": "secondHalf"
+    },
+    {
+      "id": "h-body-move",
+      "branch": "body",
+      "title": "Workout",
+      "targetCriteria": "30 min lift or run",
+      "isKeystone": true,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-body-water",
+      "branch": "body",
+      "title": "Drink water",
+      "targetCriteria": "8 glasses",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-body-sleep",
+      "branch": "body",
+      "title": "Lights out by 11",
+      "targetCriteria": "In bed, screens off",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-craft-code",
+      "branch": "craft",
+      "title": "Ship code on side project",
+      "targetCriteria": "1 commit",
+      "isKeystone": true,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-craft-sketch",
+      "branch": "craft",
+      "title": "Sketch",
+      "targetCriteria": "One page",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-bond-call",
+      "branch": "bond",
+      "title": "Call or text a friend",
+      "targetCriteria": "A real conversation",
+      "isKeystone": true,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-bond-family",
+      "branch": "bond",
+      "title": "Family dinner, no phones",
+      "targetCriteria": "",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-empire-budget",
+      "branch": "empire",
+      "title": "Log spending",
+      "targetCriteria": "Every purchase",
+      "isKeystone": true,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-empire-learn",
+      "branch": "empire",
+      "title": "Career study",
+      "targetCriteria": "25 min course",
+      "isKeystone": false,
+      "activeHalfMonth": "both"
+    },
+    {
+      "id": "h-empire-cold",
+      "branch": "empire",
+      "title": "Cold outreach",
+      "targetCriteria": "1 message",
+      "isKeystone": false,
+      "activeHalfMonth": "both",
+      "isArchived": true
+    }
+  ],
+  "logs": [
+    {
+      "dateString": "2026-07-01",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-02",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-03",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-04",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family"
+      ]
+    },
+    {
+      "dateString": "2026-07-05",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-06",
+      "completedHabitIds": [
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-07",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-08",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-09",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-07-11",
+      "completedHabitIds": [
+        "h-body-move",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-07-12",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-13",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-14",
+      "completedHabitIds": [
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-15",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-17",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-07-18",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-07-19",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-20",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-07-21",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-22",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-23",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-24",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family"
+      ]
+    },
+    {
+      "dateString": "2026-07-25",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-meditate",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch"
+      ]
+    },
+    {
+      "dateString": "2026-07-27",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-sleep",
+        "h-craft-sketch",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-28",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-meditate",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family"
+      ]
+    },
+    {
+      "dateString": "2026-07-29",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-07-30",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-07-31",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-01",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-02",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-03",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-04",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-water",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-05",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-06",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-07",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-09",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-meditate",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-11",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-12",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-13",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-14",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-15",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-16",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-17",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-18",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-19",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-20",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-family"
+      ]
+    },
+    {
+      "dateString": "2026-08-21",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-22",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-23",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-24",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-08-25",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-26",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-27",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-28",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-29",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-08-30",
+      "completedHabitIds": [
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-08-31",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-01",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-03",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call"
+      ]
+    },
+    {
+      "dateString": "2026-09-04",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-sketch",
+        "h-bond-call"
+      ]
+    },
+    {
+      "dateString": "2026-09-05",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-06",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-09-07",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-08",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-09-09",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-10",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-09-11",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-meditate",
+        "h-body-move",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-12",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-meditate",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-13",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-empire-learn",
+        "h-empire-cold"
+      ]
+    },
+    {
+      "dateString": "2026-09-14",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-15",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-meditate",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-16",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-18",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-19",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-20",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call"
+      ]
+    },
+    {
+      "dateString": "2026-09-21",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-22",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-23",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-24",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-25",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-26",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-09-27",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-28",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-29",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-09-30",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-01",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-02",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-meditate",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-03",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-04",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-sleep",
+        "h-bond-call"
+      ]
+    },
+    {
+      "dateString": "2026-10-05",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-06",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-08",
+      "completedHabitIds": [
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-09",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call"
+      ]
+    },
+    {
+      "dateString": "2026-10-10",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-11",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family"
+      ]
+    },
+    {
+      "dateString": "2026-10-12",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-13",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-14",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-water",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-15",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-craft-code",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-16",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-18",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-19",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-20",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-chess",
+        "h-body-move",
+        "h-body-water",
+        "h-body-sleep",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-22",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-chess",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-23",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-chess",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-25",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-journal",
+        "h-mind-chess",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-bond-family",
+        "h-empire-budget",
+        "h-empire-learn"
+      ]
+    },
+    {
+      "dateString": "2026-10-26",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-mind-chess",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    },
+    {
+      "dateString": "2026-10-27",
+      "completedHabitIds": [
+        "h-mind-read",
+        "h-body-move",
+        "h-body-water",
+        "h-craft-code",
+        "h-craft-sketch",
+        "h-bond-call",
+        "h-empire-budget"
+      ]
+    }
+  ],
+  "quests": [
+    {
+      "id": "q-s1-1",
+      "title": "Finish 'Deep Work'",
+      "isMainQuest": true,
+      "branch": "mind",
+      "difficulty": 3,
+      "isCompleted": true,
+      "monthIndex": 1,
+      "rewardText": "New bookmark",
+      "seasonId": "season-2026-q3"
+    },
+    {
+      "id": "q-s1-2",
+      "title": "Run a 5K",
+      "isMainQuest": true,
+      "branch": "body",
+      "difficulty": 4,
+      "isCompleted": true,
+      "monthIndex": 2,
+      "rewardText": "Running shoes",
+      "seasonId": "season-2026-q3"
+    },
+    {
+      "id": "q-s1-3",
+      "title": "Launch portfolio site",
+      "isMainQuest": false,
+      "branch": "craft",
+      "difficulty": 3,
+      "isCompleted": true,
+      "monthIndex": 3,
+      "rewardText": "",
+      "seasonId": "season-2026-q3"
+    },
+    {
+      "id": "q-s1-4",
+      "title": "Host a game night",
+      "isMainQuest": false,
+      "branch": "bond",
+      "difficulty": 2,
+      "isCompleted": true,
+      "monthIndex": 2,
+      "rewardText": "Pizza",
+      "seasonId": "season-2026-q3"
+    },
+    {
+      "id": "q-s1-5",
+      "title": "Build a 3-month emergency fund",
+      "isMainQuest": true,
+      "branch": "empire",
+      "difficulty": 5,
+      "isCompleted": false,
+      "monthIndex": 3,
+      "rewardText": "",
+      "seasonId": "season-2026-q3"
+    },
+    {
+      "id": "q-s2-1",
+      "title": "Read 3 books this season",
+      "isMainQuest": true,
+      "branch": "mind",
+      "difficulty": 3,
+      "isCompleted": false,
+      "monthIndex": 3,
+      "rewardText": "Kindle credit"
+    },
+    {
+      "id": "q-s2-2",
+      "title": "Hit a 60 kg bench",
+      "isMainQuest": true,
+      "branch": "body",
+      "difficulty": 4,
+      "isCompleted": false,
+      "monthIndex": 2,
+      "rewardText": "New gym bag"
+    },
+    {
+      "id": "q-s2-3",
+      "title": "Publish side project v1",
+      "isMainQuest": true,
+      "branch": "craft",
+      "difficulty": 5,
+      "isCompleted": false,
+      "monthIndex": 3,
+      "rewardText": "Weekend off"
+    },
+    {
+      "id": "q-s2-4",
+      "title": "Plan a weekend trip with friends",
+      "isMainQuest": false,
+      "branch": "bond",
+      "difficulty": 2,
+      "isCompleted": true,
+      "monthIndex": 1,
+      "rewardText": ""
+    },
+    {
+      "id": "q-s2-5",
+      "title": "Update resume",
+      "isMainQuest": false,
+      "branch": "empire",
+      "difficulty": 1,
+      "isCompleted": true,
+      "monthIndex": 1,
+      "rewardText": ""
+    },
+    {
+      "id": "q-s2-6",
+      "title": "Ask for a raise",
+      "isMainQuest": false,
+      "branch": "empire",
+      "difficulty": 4,
+      "isCompleted": false,
+      "monthIndex": 2,
+      "rewardText": "Fancy dinner"
+    }
+  ],
+  "loot": [
+    {
+      "id": "loot-c1",
+      "tier": "common",
+      "title": "Fancy coffee",
+      "claimedAtDate": "2026-07-14",
+      "claimedAt": "2026-07-14T08:12:00.000"
+    },
+    {
+      "id": "loot-c2",
+      "tier": "common",
+      "title": "Movie night",
+      "claimedAtDate": "2026-10-09",
+      "claimedAt": "2026-10-09T20:30:00.000"
+    },
+    {
+      "id": "loot-c3",
+      "tier": "common",
+      "title": "Fancy coffee",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-c4",
+      "tier": "common",
+      "title": "Guilt-free gaming hour",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-r1",
+      "tier": "rare",
+      "title": "New book",
+      "claimedAtDate": "2026-08-02",
+      "claimedAt": "2026-08-02T18:00:00.000"
+    },
+    {
+      "id": "loot-r2",
+      "tier": "rare",
+      "title": "Massage",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-r3",
+      "tier": "rare",
+      "title": "Nice dinner out",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-e1",
+      "tier": "epic",
+      "title": "Mechanical keyboard",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-e2",
+      "tier": "epic",
+      "title": "Concert tickets",
+      "claimedAtDate": null
+    },
+    {
+      "id": "loot-l1",
+      "tier": "legendary",
+      "title": "Weekend trip abroad",
+      "claimedAtDate": null
+    }
+  ],
+  "seasons": [
+    {
+      "id": "season-2026-q3",
+      "name": "Season 1",
+      "startDate": "2026-07-01",
+      "endDate": "2026-09-30",
+      "isArchived": true,
+      "oath": {
+        "strokes": [
+          [
+            0.1,
+            0.5,
+            0.114,
+            0.575,
+            0.128,
+            0.64,
+            0.141,
+            0.69,
+            0.155,
+            0.72,
+            0.169,
+            0.728,
+            0.183,
+            0.715,
+            0.197,
+            0.681,
+            0.21,
+            0.632,
+            0.224,
+            0.572,
+            0.238,
+            0.508,
+            0.252,
+            0.446,
+            0.266,
+            0.391,
+            0.279,
+            0.349,
+            0.293,
+            0.323,
+            0.307,
+            0.315,
+            0.321,
+            0.325,
+            0.334,
+            0.351,
+            0.348,
+            0.389,
+            0.362,
+            0.437,
+            0.376,
+            0.488,
+            0.39,
+            0.537,
+            0.403,
+            0.58,
+            0.417,
+            0.614,
+            0.431,
+            0.635,
+            0.445,
+            0.642,
+            0.459,
+            0.635,
+            0.472,
+            0.616,
+            0.486,
+            0.587,
+            0.5,
+            0.552
+          ],
+          [
+            0.55,
+            0.71,
+            0.564,
+            0.737,
+            0.578,
+            0.741,
+            0.591,
+            0.722,
+            0.605,
+            0.682,
+            0.619,
+            0.627,
+            0.633,
+            0.562,
+            0.647,
+            0.493,
+            0.66,
+            0.428,
+            0.674,
+            0.372,
+            0.688,
+            0.33,
+            0.702,
+            0.306,
+            0.716,
+            0.302,
+            0.729,
+            0.316,
+            0.743,
+            0.347,
+            0.757,
+            0.391,
+            0.771,
+            0.443,
+            0.784,
+            0.499,
+            0.798,
+            0.551,
+            0.812,
+            0.597,
+            0.826,
+            0.631,
+            0.84,
+            0.651,
+            0.853,
+            0.655,
+            0.867,
+            0.645,
+            0.881,
+            0.621,
+            0.895,
+            0.588,
+            0.909,
+            0.548,
+            0.922,
+            0.506,
+            0.936,
+            0.466,
+            0.95,
+            0.432
+          ]
+        ],
+        "signedAtDate": "2026-07-01"
+      },
+      "summary": {
+        "mind": {
+          "startLevel": 0,
+          "nodes": 5,
+          "feats": 1,
+          "activeDays": 81
+        },
+        "body": {
+          "startLevel": 0,
+          "nodes": 5,
+          "feats": 1,
+          "activeDays": 84
+        },
+        "craft": {
+          "startLevel": 0,
+          "nodes": 4,
+          "feats": 1,
+          "activeDays": 78
+        },
+        "bond": {
+          "startLevel": 0,
+          "nodes": 4,
+          "feats": 1,
+          "activeDays": 76
+        },
+        "empire": {
+          "startLevel": 0,
+          "nodes": 4,
+          "feats": 0,
+          "activeDays": 77
+        }
+      }
+    },
+    {
+      "id": "season-2026-q4",
+      "name": "Season 2",
+      "startDate": "2026-10-01",
+      "endDate": "2026-12-31",
+      "isArchived": false,
+      "oath": {
+        "strokes": [
+          [
+            0.1,
+            0.5,
+            0.114,
+            0.575,
+            0.128,
+            0.64,
+            0.141,
+            0.69,
+            0.155,
+            0.72,
+            0.169,
+            0.728,
+            0.183,
+            0.715,
+            0.197,
+            0.681,
+            0.21,
+            0.632,
+            0.224,
+            0.572,
+            0.238,
+            0.508,
+            0.252,
+            0.446,
+            0.266,
+            0.391,
+            0.279,
+            0.349,
+            0.293,
+            0.323,
+            0.307,
+            0.315,
+            0.321,
+            0.325,
+            0.334,
+            0.351,
+            0.348,
+            0.389,
+            0.362,
+            0.437,
+            0.376,
+            0.488,
+            0.39,
+            0.537,
+            0.403,
+            0.58,
+            0.417,
+            0.614,
+            0.431,
+            0.635,
+            0.445,
+            0.642,
+            0.459,
+            0.635,
+            0.472,
+            0.616,
+            0.486,
+            0.587,
+            0.5,
+            0.552
+          ],
+          [
+            0.55,
+            0.71,
+            0.564,
+            0.737,
+            0.578,
+            0.741,
+            0.591,
+            0.722,
+            0.605,
+            0.682,
+            0.619,
+            0.627,
+            0.633,
+            0.562,
+            0.647,
+            0.493,
+            0.66,
+            0.428,
+            0.674,
+            0.372,
+            0.688,
+            0.33,
+            0.702,
+            0.306,
+            0.716,
+            0.302,
+            0.729,
+            0.316,
+            0.743,
+            0.347,
+            0.757,
+            0.391,
+            0.771,
+            0.443,
+            0.784,
+            0.499,
+            0.798,
+            0.551,
+            0.812,
+            0.597,
+            0.826,
+            0.631,
+            0.84,
+            0.651,
+            0.853,
+            0.655,
+            0.867,
+            0.645,
+            0.881,
+            0.621,
+            0.895,
+            0.588,
+            0.909,
+            0.548,
+            0.922,
+            0.506,
+            0.936,
+            0.466,
+            0.95,
+            0.432
+          ]
+        ],
+        "signedAtDate": "2026-10-01"
+      }
+    }
+  ],
+  "reflections": [
+    {
+      "monthKey": "2026-08",
+      "notes": "Body is on fire. Craft keeps slipping on weekends.",
+      "pivots": []
+    },
+    {
+      "monthKey": "2026-09",
+      "notes": "Dropped cold outreach, it felt forced.",
+      "pivots": []
+    },
+    {
+      "monthKey": "2026-10",
+      "notes": "Meditation never stuck. Trying chess puzzles instead.",
+      "pivots": [
+        "Meditate → Chess puzzle"
+      ]
+    }
+  ]
+}

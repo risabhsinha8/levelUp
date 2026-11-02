@@ -33,21 +33,36 @@ abstract final class SeasonRollover {
   ///   before completing therefore still count toward it. If that quarter
   ///   has ended too, it can be completed straight away.
   ///
-  /// Throws a [StateError] while the season is still running.
+  /// - [activeBranches], when given, are the pillars in play next season
+  ///   (at least [BranchType.minEnabled]). A pillar put to rest keeps its
+  ///   base level and habits for when it returns; the summary covers the
+  ///   pillars that were active this season.
+  ///
+  /// Throws a [StateError] while the season is still running, and an
+  /// [ArgumentError] for too few [activeBranches].
   static SeasonRolloverResult apply(
     RpgState state,
     DateTime today, {
     required String newSeasonId,
+    Set<BranchType>? activeBranches,
   }) {
     final old = state.currentSeason;
     if (!RpgEngine.isSeasonOver(old, today)) {
       throw StateError('${old.name} runs until ${toDateString(old.endDate)}.');
     }
+    if (activeBranches != null &&
+        activeBranches.length < BranchType.minEnabled) {
+      throw ArgumentError.value(
+        activeBranches,
+        'activeBranches',
+        'needs at least ${BranchType.minEnabled} pillars',
+      );
+    }
     final sheet = CharacterSheet.fromState(state, today);
 
     final summary = SeasonSummary(
       branches: {
-        for (final branch in BranchType.values)
+        for (final branch in sheet.activeBranches)
           branch: BranchSeasonResult(
             startLevel: state.configFor(branch).baseLevel,
             nodes: sheet.branches[branch]!.unlockedNodes,
@@ -82,8 +97,9 @@ abstract final class SeasonRollover {
           state
               .configFor(branch)
               .copyWith(
-                baseLevel: summary.branches[branch]!.endLevel,
+                baseLevel: summary.branches[branch]?.endLevel,
                 forgedNodeCount: 0,
+                isEnabled: activeBranches?.contains(branch),
               ),
       ],
       quests: [
